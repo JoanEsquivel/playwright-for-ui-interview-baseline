@@ -50,21 +50,24 @@ export default defineConfig({
     },
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: '.auth/auth.json', },
-      dependencies: ['auth'],
+      // use: { ...devices['Desktop Chrome'], storageState: '.auth/auth.json', },
+      // dependencies: ['auth'],
+      use: { ...devices['Desktop Chrome'] },
 
     },
 
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'], storageState: '.auth/auth.json', },
-      dependencies: ['auth'],
+      // use: { ...devices['Desktop Firefox'], storageState: '.auth/auth.json', },
+      // dependencies: ['auth'],
+      use: { ...devices['Desktop Firefox'] },
     },
 
     {
       name: 'webkit',
-      use: { ...devices['Desktop Safari'], storageState: '.auth/auth.json', },
-      dependencies: ['auth'],
+      // use: { ...devices['Desktop Safari'], storageState: '.auth/auth.json', },
+      // dependencies: ['auth'],
+      use: { ...devices['Desktop Safari'] },
     },
 
     /* Test against mobile viewports. */
