@@ -1,21 +1,27 @@
 import { LoginPage } from '../pages/login';
-import { HomePage } from '../pages/home';
-import { CheckoutPage } from '../pages/checkout';
+import { InventoryPage } from '../pages/inventory';
+import { CartPage } from '../pages/cart';
+import { CheckoutStepOnePage } from '../pages/checkout-step-one';
+import { CheckoutStepTwoPage } from '../pages/checkout-step-two';
+import { CheckoutCompletePage } from '../pages/checkout-complete';
 import { expect } from '@playwright/test';
 
 export class E2E {
     constructor(page) {
         this.page = page;
         this.loginPage = new LoginPage(page);
-        this.homePage = new HomePage(page);
-        this.checkoutPage = new CheckoutPage(page);
+        this.inventoryPage = new InventoryPage(page);
+        this.cartPage = new CartPage(page);
+        this.checkoutStepOnePage = new CheckoutStepOnePage(page);
+        this.checkoutStepTwoPage = new CheckoutStepTwoPage(page);
+        this.checkoutCompletePage = new CheckoutCompletePage(page);
     }
 
     async login() {
         await this.loginPage.load();
         await this.loginPage.waitLoad();
-        await this.loginPage.submitSignInForm(process.env.email, process.env.password);
-        await this.checkoutPage.waitLoad();
-        await expect(this.checkoutPage.shopNowButton).toBeVisible();
+        await this.loginPage.submitLoginInForm(process.env.email, process.env.password);
+        await this.inventoryPage.waitLoad();
+        await expect(this.inventoryPage.title).toBeVisible();
     }
 }
