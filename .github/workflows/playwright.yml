@@ -8,16 +8,12 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    # Secretos en el repo: Settings → Secrets and variables → Actions
-    # Crea E2E_EMAIL y E2E_PASSWORD (equivalentes a email y password del .env local)
     env:
       email: ${{ secrets.E2E_EMAIL }}
       password: ${{ secrets.E2E_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
     - uses: pnpm/action-setup@v4
-      with:
-        version: 10
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
