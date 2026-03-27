@@ -103,3 +103,41 @@ playwright-for-ui/
 **Locators use semantic selectors.** I prioritize `getByRole()` and `data-test` attributes over CSS classes or XPaths. They're less brittle when the UI changes and they communicate intent — `page.getByRole('button', { name: 'Checkout' })` tells you exactly what it's clicking without needing a comment.
 
 **Test data lives in `/data`**, not in the test itself. Anything that could change (names, postal codes) goes in a JSON file. Credentials stay in `.env`.
+
+---
+
+## Manual QA Bug Report
+
+**Exploratory session conducted with user:** `problem_user`
+
+---
+
+### BUG-001 — Product image links navigate to the wrong product detail page
+
+**Title:** `problem_user` — Clicking a product image on the inventory page opens an unrelated product's detail page
+
+**Description:**
+When logged in as `problem_user`, clicking the image of any product on the inventory page does not navigate to that product's detail page. Instead, it redirects to a different, unrelated product. For example, clicking the Sauce Labs Backpack image opens the Sauce Labs Fleece Jacket detail page. This means users cannot reliably view product details by clicking the product image, breaking a core browsing interaction.
+
+**Steps to Reproduce:**
+1. Go to `https://www.saucedemo.com` and log in with username `problem_user` / password `secret_sauce`.
+2. On the inventory page, locate the **Sauce Labs Backpack** product card.
+3. Click the **product image** (not the product title link).
+
+**Expected Result:**
+The user is taken to the detail page for the Sauce Labs Backpack (`/inventory-item.html?id=4`), showing its name, description, price, and image.
+
+**Actual Result:**
+The user is redirected to the Sauce Labs Fleece Jacket detail page (`/inventory-item.html?id=5`) — a completely different product.
+
+**Evidence:**
+
+Inventory page — all product images show the same dog photo, and the Backpack image link is misrouted:
+![Inventory page](bug-evidence/inventory.png)
+
+Product detail page opened after clicking the Backpack image — shows Fleece Jacket instead:
+![Wrong product detail](bug-evidence/product-detail.png)
+
+**Severity:** High — the image is a primary clickable affordance on every product card. Misrouting users to the wrong product undermines trust, can lead to unintended purchases, and degrades the core shopping experience for this user type.
+
+**Environment:** SauceDemo (`https://www.saucedemo.com`), user `problem_user`, tested on Chromium via Playwright.
