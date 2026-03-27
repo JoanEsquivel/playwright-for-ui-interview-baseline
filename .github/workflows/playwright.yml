@@ -15,15 +15,29 @@ jobs:
       password: ${{ secrets.E2E_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: 'pnpm'
     - name: Install dependencies
-      run: npm install -g pnpm && pnpm install
+      run: pnpm install
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
     - name: Install Playwright Browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
       run: pnpm exec playwright install --with-deps
+    - name: Install Playwright system dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: pnpm exec playwright install-deps
     - name: Run Playwright tests
-      run: pnpm exec playwright test
+      run: pnpm exec playwright test tests/e2e
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
