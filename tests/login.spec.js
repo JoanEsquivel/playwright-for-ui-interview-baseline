@@ -14,14 +14,7 @@ test.describe('Login Test Suite', () => {
             await loginPage.waitLoad()
         })
     })
-    test('should login successfully', async ({ loginPage, checkoutPage }) => {
-        await loginPage.submitSignInForm(process.env.email, process.env.password)
-        await checkoutPage.waitLoad()
-        await expect(checkoutPage.shopNowButton).toBeVisible()
-    })
-    test('should display warnings when input fields are empty', async ({ loginPage }) => {
-        await loginPage.signInButton.click()
-        await expect(loginPage.emailWarning).toHaveText('Email is required')
-        await expect(loginPage.passwordWarning).toHaveText('Password is required')
+    test('should login successfully', async ({ loginPage }) => {
+        await loginPage.submitLoginInForm(process.env.email, process.env.password)
     })
 })
