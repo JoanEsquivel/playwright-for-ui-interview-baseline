@@ -11,8 +11,8 @@ A end-to-end testing framework built with Playwright covering the critical purch
 - A `.env` file at the root with the following variables:
 
 ```
-email=standard_user
-password=secret_sauce
+email=${validEmail}
+password={validPassword}
 ```
 
 > Credentials are loaded via `dotenv` in `playwright.config.js` and accessed through `process.env` — never hardcoded in tests.
