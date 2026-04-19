@@ -18,39 +18,6 @@ Apply any recorded learnings to this session.
 
 ---
 
-## Debugging Before Modifying
-
-When a test is failing, diagnose before editing. Two patterns are available:
-
-### Pattern A — View a recorded trace (post-failure, no re-run needed)
-
-Traces are captured automatically on the first retry (`trace: 'on-first-retry'` in `playwright.config.js`). After a failed run, a `.zip` trace file is saved under `test-results/`.
-
-```bash
-npx playwright show-trace test-results/<test-folder>/trace.zip
-```
-
-Opens the Playwright trace viewer in the browser. Use it to time-travel through each action: see the exact DOM snapshot, network requests, console output, and screenshots at every step. No need to re-run the test.
-
-### Pattern B — Attach to a live test run (real-time, step-by-step)
-
-Use this when the failure is intermittent or you need to inspect state mid-execution.
-
-```bash
-# Step 1 — run the test in CLI debug mode (pauses before the first action)
-npx playwright test tests/login.spec.js --debug=cli
-
-# Step 2 — note the session name printed in the output, e.g.:
-#   Debugger listening on playwright-cli session: my-session-abc123
-
-# Step 3 — attach and inspect (in a second terminal, or via playwright-cli skill)
-playwright-cli attach my-session-abc123
-playwright-cli snapshot        # see current page state
-playwright-cli click e5        # step through actions manually
-```
-
----
-
 ## Operation: UPDATE
 
 ### Update a locator
