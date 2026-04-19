@@ -7,7 +7,7 @@ description: >
   test generation, page scanning, test modification, test case documents, or
   QA coverage for saucedemo.
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill(playwright-cli, scan-to-scripts, scan-to-test-cases, playwright-create-test, modify-tests)
-model: sonnet 4.6
+model: opus
 memory: project
 maxTurns: 30
 permissionMode: acceptEdits
