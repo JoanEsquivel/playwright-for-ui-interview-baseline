@@ -87,7 +87,7 @@ playwright-cli run-code "async page => {
 
 # Wait for specific element
 playwright-cli run-code "async page => {
-  await page.locator('.loading').waitFor({ state: 'hidden' });
+  await page.waitForSelector('.loading', { state: 'hidden' });
 }"
 
 # Wait for function to return true
@@ -97,7 +97,7 @@ playwright-cli run-code "async page => {
 
 # Wait with timeout
 playwright-cli run-code "async page => {
-  await page.locator('.result').waitFor({ timeout: 10000 });
+  await page.waitForSelector('.result', { timeout: 10000 });
 }"
 ```
 
@@ -122,9 +122,10 @@ playwright-cli run-code "async page => {
 ```bash
 # Handle file download
 playwright-cli run-code "async page => {
-  const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('link', { name: 'Download' }).click();
-  const download = await downloadPromise;
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.click('a.download-link')
+  ]);
   await download.saveAs('./downloaded-file.pdf');
   return download.suggestedFilename();
 }"
@@ -196,7 +197,7 @@ playwright-cli run-code "async page => {
 # Try-catch in run-code
 playwright-cli run-code "async page => {
   try {
-    await page.getByRole('button', { name: 'Submit' }).click({ timeout: 1000 });
+    await page.click('.maybe-missing', { timeout: 1000 });
     return 'clicked';
   } catch (e) {
     return 'element not found';
@@ -210,9 +211,9 @@ playwright-cli run-code "async page => {
 # Login and save state
 playwright-cli run-code "async page => {
   await page.goto('https://example.com/login');
-  await page.getByRole('textbox', { name: 'Email' }).fill('user@example.com');
-  await page.getByRole('textbox', { name: 'Password' }).fill('secret');
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.fill('input[name=email]', 'user@example.com');
+  await page.fill('input[name=password]', 'secret');
+  await page.click('button[type=submit]');
   await page.waitForURL('**/dashboard');
   await page.context().storageState({ path: 'auth.json' });
   return 'Login successful';
