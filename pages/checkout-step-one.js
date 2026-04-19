@@ -13,6 +13,7 @@ export class CheckoutStepOnePage {
         this.postalCodeInput = page.getByRole('textbox', { name: 'Zip/Postal Code' }).describe('Zip/Postal code input');
         this.continueButton = page.locator('[data-test="continue"]').describe('Continue button');
         this.cancelButton = page.locator('[data-test="cancel"]').describe('Cancel button');
+        this.errorMessage = page.locator('[data-test="error"]').describe('Validation error message banner');
     }
 
     async load() {

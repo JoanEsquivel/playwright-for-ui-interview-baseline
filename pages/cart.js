@@ -24,4 +24,8 @@ export class CartPage {
             await this.checkoutButton.waitFor({ state: 'visible' });
         });
     }
+
+    async clickCheckout() {
+        await this.checkoutButton.click();
+    }
 }
