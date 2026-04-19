@@ -45,15 +45,35 @@ Claude Code skills are prompt injections loaded when invoked with `/skill-name`.
 
 ---
 
-### `scan-to-tests`
-**Invoke:** `/scan-to-tests`
+### `scan-to-scripts`
+**Invoke:** `/scan-to-scripts`
 **Purpose:** Given a URL or relative path, Claude:
 1. Opens the browser with `playwright-cli`
 2. Takes a snapshot and builds an element inventory
 3. Detects auth requirements
 4. Generates the full page object, fixture wiring, and spec file automatically
 
-**Trigger phrases:** "scan this URL and create tests", "generate tests for /inventory.html", "create tests for https://..."
+**Trigger phrases:** "scan this URL and create tests", "generate tests for /inventory.html", "create tests for https://...", "generate scripts for"
+
+---
+
+### `scan-to-test-cases`
+**Invoke:** `/scan-to-test-cases`
+**Purpose:** Given a URL or a workflow description, Claude:
+1. Opens the browser with `playwright-cli`
+2. Scans the page or navigates each step of the workflow
+3. Applies ISTQB test design techniques (EP, BVA, Decision Table, State Transition, Use Case, Error Guessing)
+4. Generates structured test case documents in `.md` format under `testcases/`
+
+**Techniques used:**
+- **Equivalence Partitioning** — valid and invalid input groups
+- **Boundary Value Analysis** — values at, just below, and just above field boundaries
+- **Decision Table Testing** — combinations of conditions and their expected outcomes
+- **State Transition Testing** — valid and invalid state changes
+- **Use Case Testing** — main flow + alternative and exception flows
+- **Error Guessing** — common error patterns and edge cases
+
+**Trigger phrases:** "generate test cases for /inventory.html", "create ISTQB test cases for the checkout flow", "document test cases for https://...", "scan and write test cases for"
 
 ---
 
@@ -99,12 +119,15 @@ Claude reads these at the start of each skill invocation and appends to them aft
 │   └── SKILL.md
 ├── modify-tests/
 │   └── SKILL.md
-├── scan-to-tests/
+├── scan-to-scripts/
+│   └── SKILL.md
+├── scan-to-test-cases/
 │   └── SKILL.md
 ├── memory/
 │   ├── README.md
 │   ├── create-test.md
 │   ├── modify-tests.md
-│   └── scan-to-tests.md
+│   ├── scan-to-scripts.md
+│   └── scan-to-test-cases.md
 └── README.md
 ```

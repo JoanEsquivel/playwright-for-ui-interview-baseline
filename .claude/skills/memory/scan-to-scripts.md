@@ -1,4 +1,4 @@
-# scan-to-tests — Learnings
+# scan-to-scripts — Learnings
 
 ## Selector Patterns
 <!-- [YYYY-MM-DD] <page or element>: <what was learned> -->
