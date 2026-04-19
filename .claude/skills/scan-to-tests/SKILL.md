@@ -1,9 +1,9 @@
 ---
-name: scan-to-scripts
+name: scan-to-tests
 description: Scans a live web page with playwright-cli, discovers its interactive elements, and generates a page object, fixture entry, and spec file following the project's architecture rules. Invoke when the user provides a URL or path and asks to generate tests for it.
 ---
 
-# scan-to-scripts
+# scan-to-tests
 
 Orchestrates two skills in sequence:
 1. **playwright-cli** — live browser scan to discover elements
@@ -15,7 +15,7 @@ Architecture rules are always active via `CLAUDE.md` — no need to re-declare t
 
 ## Memory Check
 
-Before starting, read `.claude/skills/memory/scan-to-scripts.md` (if it exists).
+Before starting, read `.claude/skills/memory/scan-to-tests.md` (if it exists).
 Apply any recorded learnings to this session.
 
 ---
@@ -486,5 +486,5 @@ Before finishing, verify:
 
 After completing the task, if you discovered anything new about this project
 (a selector pattern, an auth behavior, a page structure, a gotcha), append it
-to `.claude/skills/memory/scan-to-scripts.md` in the appropriate section.
+to `.claude/skills/memory/scan-to-tests.md` in the appropriate section.
 Only record things that are non-obvious and would save future effort.

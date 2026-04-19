@@ -7,8 +7,7 @@
 | `playwright-cli` | You need to open a browser, navigate, click, type, take screenshots, or interact with a live page |
 | `playwright-create-test` | You want to create a new page object, fixture entry, and spec file from scratch |
 | `modify-tests` | You want to update or delete an existing test, locator, action method, or page object |
-| `scan-to-scripts` | You have a URL or path and want Claude to scan the page and generate Playwright scripts automatically |
-| `scan-to-test-cases` | You have a URL or workflow description and want ISTQB-style test case documents in Markdown format |
+| `scan-to-tests` | You have a URL or path and want Claude to scan the page and generate tests automatically |
 
 ## Always-Active Rules
 
