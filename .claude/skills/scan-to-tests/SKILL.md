@@ -1,37 +1,17 @@
 ---
-<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
-name: scan-to-scripts
-description: Scans a live web page with playwright-cli, discovers its interactive elements, and generates a page object, fixture entry, and spec file following the project's architecture rules. Invoke when the user provides a URL or path and asks to generate tests for it.
-=======
 name: scan-to-tests
 description: >
   Escanea una página web con playwright-cli, descubre sus elementos interactivos,
   y genera el page object, fixture entry y spec file siguiendo las reglas de
   playwright-architecture. Invocar cuando el usuario da una URL o ruta y pide
   generar tests para ella.
->>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md
 ---
 
-# scan-to-scripts
+# scan-to-tests
 
-<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
-Orchestrates two skills in sequence:
-1. **playwright-cli** — live browser scan to discover elements
-2. **playwright-create-test** — code generation following the project's architecture rules
-
-Architecture rules are always active via `CLAUDE.md` — no need to re-declare them here.
-
----
-
-## Memory Check
-
-Before starting, read `.claude/skills/memory/scan-to-scripts.md` (if it exists).
-Apply any recorded learnings to this session.
-=======
 Orquesta dos skills en secuencia:
 1. **playwright-cli** — scan en vivo del browser para descubrir elementos
 2. **playwright-architecture** — generación de código siguiendo las reglas del proyecto
->>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md
 
 ---
 
@@ -570,27 +550,6 @@ test.describe('Inventory E2E Suite', () => {
 
 Antes de terminar, verifica todo esto:
 
-<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
-- [ ] `pages/<pagename>.js` exists with constructor, `load()`, `waitLoad()`, and at least one action method
-- [ ] All locators use `getByRole()` or `getByLabel()` with `.describe()` chained
-- [ ] No `expect()` inside page object methods (except bridge guard inside `test.step()`)
-- [ ] `fixtures/page.fixtures.js` has the import and fixture entry for the new page
-- [ ] Spec imports from `../fixtures/index.fixtures` or `../../fixtures/index.fixtures` (never from `@playwright/test`)
-- [ ] `beforeEach` uses `load()` + `waitLoad()`
-- [ ] No hard-coded credentials in any file
-- [ ] No direct `page.goto()` calls in specs
-- [ ] `utils/e2e.js` updated if `REQUIRES_AUTH = true` or page is part of a flow
-- [ ] Tests pass: `pnpm exec playwright test <spec-file> --project=chromium`
-
----
-
-## Memory Update
-
-After completing the task, if you discovered anything new about this project
-(a selector pattern, an auth behavior, a page structure, a gotcha), append it
-to `.claude/skills/memory/scan-to-scripts.md` in the appropriate section.
-Only record things that are non-obvious and would save future effort.
-=======
 - [ ] `pages/<pagename>.js` existe con constructor, `load()`, `waitLoad()`, y al menos un action method
 - [ ] Todos los locators usan `getByRole()` o `getByLabel()` con `.describe()` encadenado
 - [ ] Sin `expect()` dentro de métodos de page object (salvo bridge guard en `test.step()`)
@@ -601,4 +560,3 @@ Only record things that are non-obvious and would save future effort.
 - [ ] Sin llamadas directas a `page.goto()` en specs
 - [ ] `utils/e2e.js` actualizado si `REQUIRES_AUTH = true` o la página es parte de un flujo
 - [ ] Los tests pasan: `pnpm exec playwright test <spec-file> --project=chromium`
->>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md

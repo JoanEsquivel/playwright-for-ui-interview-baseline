@@ -33,7 +33,7 @@ pnpm exec playwright install --with-deps
 
 ## Running Tests
 
-### Headless (default) 
+### Headless (default)
 Runs all tests across all configured browsers without opening a UI.
 ```bash
 pnpm exec playwright test
@@ -128,7 +128,7 @@ When logged in as `problem_user`, clicking the image of any product on the inven
 The user is taken to the detail page for the Sauce Labs Backpack (`/inventory-item.html?id=4`), showing its name, description, price, and image.
 
 **Actual Result:**
-The user is redirected to the Sauce Labs Fleece Jacket detail page (`/inventory-item.html?id=5`) — a completely different product.
+The user is redirected to the Sauce Labs Fleece Jacket detail page (`/inventory-item.html?id=5`) a completely different product.
 
 **Evidence:**
 

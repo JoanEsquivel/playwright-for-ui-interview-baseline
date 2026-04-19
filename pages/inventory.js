@@ -37,8 +37,4 @@ export class InventoryPage {
         }
         return names;
     }
-
-    async clickCartLink() {
-        await this.cartLink.click();
-    }
 }
