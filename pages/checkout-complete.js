@@ -20,8 +20,4 @@ export class CheckoutCompletePage {
             await this.successHeading.waitFor({ state: 'visible' });
         });
     }
-
-    async clickBackHome() {
-        await this.backHomeButton.click();
-    }
 }
