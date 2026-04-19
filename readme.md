@@ -33,7 +33,7 @@ pnpm exec playwright install --with-deps
 
 ## Running Tests
 
-### Headless (default)
+### Headless (default) 
 Runs all tests across all configured browsers without opening a UI.
 ```bash
 pnpm exec playwright test
