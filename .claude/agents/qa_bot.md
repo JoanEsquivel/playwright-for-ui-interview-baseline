@@ -123,9 +123,19 @@ User request
 │       2. → invoke ONE scan skill per URL IN PARALLEL (same turn)
 │
 ├── "generate scripts from /testcases documents"?
-│   └── 1. playwright-cli open each relevant page + snapshot ✓
-│             (testcase docs name the pages — open every one of them)
-│       2. → invoke skill: playwright-create-test with live snapshot context
+│   └── STEP 1 — Read every .md file in testcases/ (Glob + Read)
+│       STEP 2 — For each doc, extract:
+│                 • URLs: from "Application Under Test", steps, or preconditions
+│                 • Scenario: title, objective, acceptance criteria, steps + expected results
+│                 • Auth requirement: if steps mention login or routes like /inventory, /cart, /checkout-*
+│       STEP 3 — Live-scan EVERY extracted URL with playwright-cli:
+│                 • If auth required → playwright-cli state-load .auth/auth.json first
+│                 • playwright-cli open <url> → playwright-cli snapshot (capture all interactive elements)
+│                 • For multi-step flows, navigate through each route and snapshot at each step
+│       STEP 4 — invoke skill: scan-to-scripts for each URL, passing:
+│                 • The live snapshot (locators from the real page — never guessed)
+│                 • The testcase doc context (scenario title, steps, expected results, acceptance criteria)
+│                 • Auth requirement so the skill places specs in tests/e2e/ when needed
 │
 ├── "add/create/scaffold" tests + NO URL to scan?
 │   └── 1. playwright-cli open target page + snapshot ✓
