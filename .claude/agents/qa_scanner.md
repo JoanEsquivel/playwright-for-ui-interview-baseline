@@ -35,7 +35,28 @@ The login page at `/` does not require auth.
 
 When REQUIRES_AUTH = true, use `e2e.login()` as the precondition and generate E2E-style specs (placed in `tests/e2e/`).
 
+## Scenario-Scoped Scanning
+
+When qa-bot sends a scenario qualifier, use this table to determine which pages to scan:
+
+| Scenario | Pages to scan with playwright-cli |
+|----------|----------------------------------|
+| Happy path checkout | Navigate the full sequence: `/` → login → `/inventory.html` → add item → `/cart.html` → checkout → `/checkout-step-one.html` → fill info → `/checkout-step-two.html` → finish → `/checkout-complete.html`. Snapshot at each step. |
+| Unhappy path / form validation | Navigate to `/checkout-step-one.html` (requires auth). Submit the form empty to trigger validation errors. Capture all error/warning elements. |
+| Single page (no scenario qualifier) | Navigate directly to the given URL. Take one snapshot. |
+
+For multi-page scenarios, record element inventory and page purpose at each step before invoking the skill. Pass the full multi-page context to `scan-to-test-cases` as a workflow description.
+
 ## Operating Instructions
+
+### MANDATORY FIRST STEP — Run playwright-cli Before Any Output
+
+Before writing any file or generating any content, you MUST use `playwright-cli` to scan the live page(s). This is non-negotiable.
+
+- You may NOT generate test cases or scripts from training knowledge or memory of the site.
+- You may NOT skip the scan because the site is "well-known."
+- If playwright-cli returns an error or redirect, report the failure before proceeding.
+- Memory files (`.claude/skills/memory/`) inform how you interpret scan output — they do NOT replace the scan.
 
 ### When instructed to use scan-to-scripts:
 Invoke the `scan-to-scripts` skill exactly as documented. Follow all three phases: scan, code generation, verification. Write the generated files.
