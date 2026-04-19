@@ -1,10 +1,20 @@
 ---
+<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
 name: scan-to-scripts
 description: Scans a live web page with playwright-cli, discovers its interactive elements, and generates a page object, fixture entry, and spec file following the project's architecture rules. Invoke when the user provides a URL or path and asks to generate tests for it.
+=======
+name: scan-to-tests
+description: >
+  Escanea una página web con playwright-cli, descubre sus elementos interactivos,
+  y genera el page object, fixture entry y spec file siguiendo las reglas de
+  playwright-architecture. Invocar cuando el usuario da una URL o ruta y pide
+  generar tests para ella.
+>>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md
 ---
 
 # scan-to-scripts
 
+<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
 Orchestrates two skills in sequence:
 1. **playwright-cli** — live browser scan to discover elements
 2. **playwright-create-test** — code generation following the project's architecture rules
@@ -17,52 +27,57 @@ Architecture rules are always active via `CLAUDE.md` — no need to re-declare t
 
 Before starting, read `.claude/skills/memory/scan-to-scripts.md` (if it exists).
 Apply any recorded learnings to this session.
+=======
+Orquesta dos skills en secuencia:
+1. **playwright-cli** — scan en vivo del browser para descubrir elementos
+2. **playwright-architecture** — generación de código siguiendo las reglas del proyecto
+>>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md
 
 ---
 
 ## Input
 
-The user provides one of:
-- Full URL: `https://www.saucedemo.com/inventory.html`
-- Relative path to the baseURL in `playwright.config.js`: `/inventory.html`
+El usuario provee uno de:
+- URL completa: `https://www.saucedemo.com/inventory.html`
+- Ruta relativa al baseURL en `playwright.config.js`: `/inventory.html`
 
-If the input is a relative path, prepend `https://www.saucedemo.com` to form the full URL.
+Si el input es una ruta, prepende `https://www.saucedemo.com` para formar la URL completa.
 
 ---
 
-## Project File Map
+## Mapa de archivos del proyecto
 
 ```
 playwright-for-ui/
-├── pages/                   ← Page Object classes, one per page
-├── utils/e2e.js             ← E2E class for multi-step flows
+├── pages/                   ← Page Object classes, uno por página
+├── utils/e2e.js             ← Clase E2E multi-step (agrega page objects)
 ├── fixtures/
-│   ├── page.fixtures.js     ← Wires each PageObject via base.extend()
-│   ├── e2e.fixtures.js      ← Wires the E2E class
-│   └── index.fixtures.js    ← mergeTests() — only import source in specs
+│   ├── page.fixtures.js     ← Wires cada PageObject via base.extend()
+│   ├── e2e.fixtures.js      ← Wire la clase E2E
+│   └── index.fixtures.js    ← mergeTests() — ÚNICO import source en specs
 ├── tests/
-│   ├── *.spec.js            ← Page Object style (single-page tests)
-│   └── e2e/*.spec.js        ← E2E style (multi-page flows)
-└── data/test.json           ← Shared test data (no credentials)
+│   ├── *.spec.js            ← Page Object style (tests de una sola página)
+│   └── e2e/*.spec.js        ← E2E style (flujos multi-página)
+└── data/test.json           ← Test data compartida (sin credentials)
 ```
 
 ---
 
-## Phase 1 — Scan the Page
+## FASE 1 — Scan de la página
 
-### Step 1.1 — Open browser and navigate
+### Paso 1.1 — Abrir browser y navegar
 
-Use the `playwright-cli` skill to navigate to the URL and get a snapshot of elements:
+Usa el skill `playwright-cli` para navegar a la URL y obtener un snapshot de los elementos:
 
 ```
-Invoke playwright-cli:
-  - Navigate to <FULL_URL>
-  - Take a page snapshot
-  - Evaluate document.title and h1 content
-  - Take a screenshot for visual reference
+Invoca playwright-cli:
+  - Navegar a <FULL_URL>
+  - Tomar snapshot de la página
+  - Evaluar document.title y el contenido del h1
+  - Tomar screenshot para referencia visual
 ```
 
-The snapshot returns lines in this format:
+El snapshot retorna líneas con este formato:
 ```
 e1  [textbox "Username"]
 e2  [textbox "Password"]
@@ -71,68 +86,68 @@ e4  [heading "Swag Labs" level=1]
 e5  [link "Forgot password?"]
 ```
 
-### Step 1.2 — Detect authentication requirement
+### Paso 1.2 — Detectar autenticación requerida
 
-Visit the URL directly. If the resulting URL is `/` or `/#/` and the snapshot contains a `[textbox "Username"]` instead of the expected content → `REQUIRES_AUTH = true`.
+Visita la URL directamente. Si la URL resultante es `/` o `/#/` y el snapshot contiene un `[textbox "Username"]` en lugar del contenido esperado → `REQUIRES_AUTH = true`.
 
-If the page loads normally → `REQUIRES_AUTH = false`.
+Si la página carga normalmente → `REQUIRES_AUTH = false`.
 
-### Step 1.3 — Build element inventory
+### Paso 1.3 — Construir inventario de elementos
 
-For each element in the snapshot, record:
+Para cada elemento del snapshot, registra:
 
-| Field | How to get it |
+| Campo | Cómo obtenerlo |
 |-------|---------------|
-| Role | The label in brackets: `textbox`, `button`, `link`, `heading`, `checkbox`, `combobox`, `img` |
-| Accessible name | The string in quotes: `"Add to cart"`, `"Username"` |
-| data-testid | The `data-testid="..."` attribute if present |
+| Role | La etiqueta entre corchetes: `textbox`, `button`, `link`, `heading`, `checkbox`, `combobox`, `img` |
+| Accessible name | El string entre comillas: `"Add to cart"`, `"Username"` |
+| data-testid | El atributo `data-testid="..."` si está presente |
 
-**Categories to capture (testable elements):**
+**Categorías a capturar (elementos testables):**
 - Inputs: `textbox`, `searchbox`, `spinbutton`, `combobox`, `checkbox`, `radio`, `switch`
-- Actions: `button`, `link`, `menuitem`, `tab`
-- Content landmarks: `heading`, `img` (with alt text), `status`, `alert`
+- Acciones: `button`, `link`, `menuitem`, `tab`
+- Landmarks de contenido: `heading`, `img` (con alt text), `status`, `alert`
 
-Ignore purely structural elements (`generic`, `none`, `presentation`) unless they have `data-testid`.
+Ignora elementos puramente estructurales (`generic`, `none`, `presentation`) a menos que tengan `data-testid`.
 
-### Step 1.4 — Understand the page purpose
+### Paso 1.4 — Entender el propósito de la página
 
-Answer these questions before continuing:
-1. What is the user's primary action on this page? (submit form, browsing, checkout step, etc.)
-2. What are the 2–5 most important flows? (happy path, error states, edge cases)
-3. Is this a standalone screen or a step in a multi-page flow?
+Responde estas preguntas antes de continuar:
+1. ¿Cuál es la acción principal del usuario en esta página? (submit form, browsing, checkout step, etc.)
+2. ¿Cuáles son los 2–5 flujos más importantes? (happy path, error states, edge cases)
+3. ¿Es una pantalla standalone o un paso en un flujo multi-página?
 
-### Step 1.5 — Check if a page object already exists
+### Paso 1.5 — Verificar si ya existe un page object
 
-Before generating code, check whether a page object already exists for this route:
-- Read the `pages/` directory
-- Read `fixtures/page.fixtures.js` to see what is already wired
+Antes de generar código, revisa si ya existe un page object para esta ruta:
+- Lee el directorio `pages/`
+- Lee `fixtures/page.fixtures.js` para ver qué está wired
 
-If it already exists, go directly to Step 2.3 — only add missing locators and action methods.
+Si ya existe, ve directamente al Paso 2.3 — solo agrega locators y action methods faltantes.
 
-### Step 1.6 — Close browser
+### Paso 1.6 — Cerrar browser
 
-Close the browser via playwright-cli.
-
----
-
-## Phase 2 — Code Generation
-
-Use the element inventory from Phase 1. Follow all architecture rules from `CLAUDE.md`.
+Cierra el browser via playwright-cli.
 
 ---
 
-### Step 2.1 — Derive names from the URL
+## FASE 2 — Generación de código
 
-From the URL, derive:
-- `<pagename>`: lowercase, hyphen-separated. E.g.: `inventory`, `cart`, `product-detail`, `checkout-step-one`
-- `<PageName>`: PascalCase. E.g.: `Inventory`, `Cart`, `ProductDetail`, `CheckoutStepOne`
-- `<pageName>`: camelCase (fixture name). E.g.: `inventoryPage`, `cartPage`, `productDetailPage`
+Usa el inventario de la Fase 1. Sigue todas las reglas de esta sección al pie de la letra.
 
 ---
 
-### Step 2.2 — Create the page object
+### Paso 2.1 — Derivar nombres desde la URL
 
-**File:** `pages/<pagename>.js`
+De la URL, deriva:
+- `<pagename>`: lowercase, hyphen-separated. Ej: `inventory`, `cart`, `product-detail`, `checkout-step-one`
+- `<PageName>`: PascalCase. Ej: `Inventory`, `Cart`, `ProductDetail`, `CheckoutStepOne`
+- `<pageName>`: camelCase (nombre del fixture). Ej: `inventoryPage`, `cartPage`, `productDetailPage`
+
+---
+
+### Paso 2.2 — Crear el Page Object
+
+**Archivo:** `pages/<pagename>.js`
 
 ```javascript
 // @ts-check
@@ -143,9 +158,9 @@ export class <PageName>Page {
     /** @param {import('@playwright/test').Page} page */
     constructor(page) {
         this.page = page;
-        this.url = '<route>';            // e.g.: '/inventory.html'
+        this.url = '<route>';            // ej: '/inventory.html'
 
-        // --- Locators (one property per interactive element) ---
+        // --- Locators (un property por elemento interactivo) ---
         this.heading = page.getByRole('heading', { name: 'Page Title' }).describe('Page Title heading');
         this.someButton = page.getByRole('button', { name: 'Label' }).describe('Label button');
         this.someInput = page.getByRole('textbox', { name: 'Label' }).describe('Label input field');
@@ -161,7 +176,7 @@ export class <PageName>Page {
         });
     }
 
-    // --- Action methods (interaction only, zero assertions) ---
+    // --- Action methods (solo interacción, cero assertions) ---
     async <actionName>(<params>) {
         await this.<input>.fill(<param>);
         await this.<submitButton>.click();
@@ -169,9 +184,9 @@ export class <PageName>Page {
 }
 ```
 
-**Snapshot element to locator mapping (priority top to bottom):**
+**Tabla de mapeo de snapshot elements a locators (prioridad de arriba abajo):**
 
-| Snapshot element | Preferred locator | Fallback |
+| Snapshot element | Locator preferido | Fallback |
 |-----------------|------------------|---------|
 | `[textbox "Label"]` | `page.getByRole('textbox', { name: 'Label' })` | `page.getByLabel('Label')` |
 | `[button "Label"]` | `page.getByRole('button', { name: 'Label' })` | `page.locator('[data-testid="..."]')` |
@@ -180,82 +195,82 @@ export class <PageName>Page {
 | `[checkbox "Label"]` | `page.getByRole('checkbox', { name: 'Label' })` | `page.getByLabel('Label')` |
 | `[combobox "Label"]` | `page.getByRole('combobox', { name: 'Label' })` | `page.getByLabel('Label')` |
 | `[img "alt text"]` | `page.getByRole('img', { name: 'alt text' })` | `page.getByAltText('alt text')` |
-| Has data-testid only | `page.locator('[data-testid="<id>"]')` | — |
-| No role or testid | `page.getByText('visible text', { exact: true })` | — |
+| Solo tiene data-testid | `page.locator('[data-testid="<id>"]')` | — |
+| Sin role ni testid | `page.getByText('texto visible', { exact: true })` | — |
 
-**`.describe()` rule:** Always chain `.describe('<Accessible Name> <role>')`:
+**Regla `.describe()`:** Siempre cadena `.describe('<Accessible Name> <role>')`:
 - `'Login button'`, `'Username input field'`, `'Products heading'`, `'Add to cart button'`
 
-**`waitLoad()` rule:** Use the most reliable element to indicate the page has fully loaded — typically the main heading or primary CTA. Do not use spinners or generic containers.
+**Regla de `waitLoad()`:** Usa el elemento más confiable para indicar que la página cargó completamente — típicamente el heading principal o el CTA primario. No uses spinners ni contenedores genéricos.
 
-**Action method rules:**
-- One method per distinct user interaction
-- Accept all variable data as parameters — never hard-code strings
-- No `expect()`. No `page.waitForURL()`. No `waitFor()` unless it is an internal guard.
-- Naming: verb + noun: `submitLoginForm`, `addItemToCart`, `applyFilter`
+**Reglas para action methods:**
+- Un método por interacción de usuario distinta
+- Acepta todos los datos variables como parámetros — nunca hard-code strings
+- Sin `expect()`. Sin `page.waitForURL()`. Sin `waitFor()` a menos que sea guard interno.
+- Nomenclatura: verbo + sustantivo: `submitLoginForm`, `addItemToCart`, `applyFilter`
 
 ---
 
-### Step 2.3 — Wire into `fixtures/page.fixtures.js`
+### Paso 2.3 — Wire en `fixtures/page.fixtures.js`
 
-Open `fixtures/page.fixtures.js` and add:
+Abre `fixtures/page.fixtures.js` y agrega:
 
-1. Import at the top of the file:
+1. Import al inicio del archivo:
 ```javascript
 import { <PageName>Page } from '../pages/<pagename>';
 ```
 
-2. New entry inside `base.extend({...})`:
+2. Nueva entrada dentro de `base.extend({...})`:
 ```javascript
 <pageName>Page: async ({ page }, use) => {
     await use(new <PageName>Page(page));
 },
 ```
 
-`fixtures/index.fixtures.js` picks it up automatically via `mergeTests()` — do NOT touch that file.
+`fixtures/index.fixtures.js` lo recoge automáticamente via `mergeTests()` — NO toques ese archivo.
 
 ---
 
-### Step 2.4 — Decide test style
+### Paso 2.4 — Decidir estilo de tests
 
-| Phase 1 condition | Style | Spec location |
+| Condición de Fase 1 | Estilo | Ubicación del spec |
 |---------------------|--------|--------------------|
-| `REQUIRES_AUTH = false` AND standalone page | **Page Object style** | `tests/<pagename>.spec.js` |
-| `REQUIRES_AUTH = true` AND step in a multi-page flow | **E2E style** | `tests/e2e/<pagename>.spec.js` |
-| `REQUIRES_AUTH = true` AND can be visited directly post-login | **Both** — Page Object spec for elements, E2E spec for full flow | Both locations |
+| `REQUIRES_AUTH = false` Y página standalone | **Page Object style** | `tests/<pagename>.spec.js` |
+| `REQUIRES_AUTH = true` Y es paso en flujo multi-página | **E2E style** | `tests/e2e/<pagename>.spec.js` |
+| `REQUIRES_AUTH = true` Y puede visitarse directamente post-login | **Ambos** — Page Object spec para elementos, E2E spec para flujo completo | Ambas ubicaciones |
 
 ---
 
-### Step 2.5 — Update `utils/e2e.js` (E2E style only)
+### Paso 2.5 — Actualizar `utils/e2e.js` (solo E2E style)
 
-Only when `REQUIRES_AUTH = true` or the page is part of a multi-step flow:
+Solo cuando `REQUIRES_AUTH = true` o la página es parte de un flujo multi-step:
 
-1. Add the import:
+1. Agrega el import:
 ```javascript
 import { <PageName>Page } from '../pages/<pagename>';
 ```
 
-2. Instantiate in the `E2E` constructor:
+2. Instancia en el constructor de `E2E`:
 ```javascript
 this.<pageName>Page = new <PageName>Page(page);
 ```
 
-3. If the page is a **step** in an existing flow, add a workflow method:
+3. Si la página es un **paso** en un flujo existente, agrega un workflow method:
 ```javascript
 async <flowName>() {
     await this.<pageName>Page.load();
     await this.<pageName>Page.waitLoad();
     await this.<pageName>Page.<action>(<params>);
-    // Bridge guard — confirms page transition, NOT a test assertion:
+    // Bridge guard — confirma transición de página, NO es una test assertion:
     await expect(this.<nextPage>.someElement).toBeVisible();
 }
 ```
 
-The bridge guard with `expect()` is only allowed here when the method causes a page transition and the caller needs to know the transition occurred.
+El bridge guard con `expect()` solo está permitido aquí cuando el método causa una transición de página y el caller necesita saber que la transición ocurrió.
 
 ---
 
-### Step 2.6 — Write the spec file
+### Paso 2.6 — Escribir el spec file
 
 **Page Object style — `tests/<pagename>.spec.js`:**
 
@@ -275,7 +290,7 @@ test.describe('<PageName> Test Suite', () => {
         await expect(<pageName>Page.<heading>).toBeVisible()
     })
 
-    test('should <primary action description>', async ({ <pageName>Page }) => {
+    test('should <descripción de acción primaria>', async ({ <pageName>Page }) => {
         await <pageName>Page.<actionMethod>(<testData>)
         await expect(<pageName>Page.<resultLocator>).<matcher>()
     })
@@ -294,7 +309,7 @@ test.describe('<PageName> E2E Suite', () => {
         await e2e.login()
     })
 
-    test('should <post-login description>', async ({ <pageName>Page }) => {
+    test('should <descripción post-login>', async ({ <pageName>Page }) => {
         await <pageName>Page.load()
         await <pageName>Page.waitLoad()
         await expect(<pageName>Page.<locator>).<matcher>()
@@ -303,32 +318,32 @@ test.describe('<PageName> E2E Suite', () => {
 })
 ```
 
-**Import path rule — never mix these up:**
+**Regla de import path — nunca confundir:**
 - `tests/*.spec.js` → `'../fixtures/index.fixtures'`
 - `tests/e2e/*.spec.js` → `'../../fixtures/index.fixtures'`
 
-**Assertion guide:**
+**Guía de assertions — qué assertar:**
 
-| Element type | Recommended assertion |
+| Tipo de elemento | Assertion recomendada |
 |-----------------|----------------------|
-| Visible heading/label | `await expect(<pageName>Page.heading).toBeVisible()` |
-| Input after fill | `await expect(<pageName>Page.input).toHaveValue('...')` |
-| URL after navigation | `await expect(<pageName>Page.page).toHaveURL(/regex/)` |
-| Error message | `await expect(<pageName>Page.errorMessage).toBeVisible()` |
-| Button state | `await expect(<pageName>Page.button).toBeEnabled()` / `.toBeDisabled()` |
-| Badge/counter | `await expect(<pageName>Page.badge).toHaveText('N')` |
-| Item list | `await expect(<pageName>Page.itemList).toHaveCount(N)` |
+| Heading/label visible | `await expect(<pageName>Page.heading).toBeVisible()` |
+| Input después de fill | `await expect(<pageName>Page.input).toHaveValue('...')` |
+| URL después de navegación | `await expect(<pageName>Page.page).toHaveURL(/regex/)` |
+| Mensaje de error | `await expect(<pageName>Page.errorMessage).toBeVisible()` |
+| Estado de botón | `await expect(<pageName>Page.button).toBeEnabled()` / `.toBeDisabled()` |
+| Badge/contador | `await expect(<pageName>Page.badge).toHaveText('N')` |
+| Lista de items | `await expect(<pageName>Page.itemList).toHaveCount(N)` |
 
-**Test naming convention:** `'should <verb> <noun> <qualifier>'`
+**Naming convention de tests:** `'should <verbo> <sustantivo> <calificador>'`
 - `'should display all inventory items'`
 - `'should show error for empty username'`
 - `'should redirect to inventory after login'`
 
 ---
 
-### Step 2.7 — Add test data if needed
+### Paso 2.7 — Agregar test data si aplica
 
-If tests need dynamic data (product names, quantities, expected error messages), add entries to `data/test.json`:
+Si los tests necesitan datos dinámicos (nombres de productos, cantidades, mensajes de error esperados), agrega entradas a `data/test.json`:
 
 ```json
 {
@@ -338,56 +353,142 @@ If tests need dynamic data (product names, quantities, expected error messages),
 }
 ```
 
-Import in the spec:
-- From `tests/*.spec.js`: `import data from '../data/test.json'`
-- From `tests/e2e/*.spec.js`: `import data from '../../data/test.json'`
+Import en el spec:
+- Desde `tests/*.spec.js`: `import data from '../data/test.json'`
+- Desde `tests/e2e/*.spec.js`: `import data from '../../data/test.json'`
 
-**NEVER** put credentials in `test.json`. Credentials always come from `process.env.email` and `process.env.password`.
+**NUNCA** pongas credentials en `test.json`. Las credentials siempre van de `process.env.email` y `process.env.password`.
 
 ---
 
-## Phase 3 — Verification
+## FASE 3 — Verificación
 
-### Step 3.1 — Run generated tests
+### Paso 3.1 — Ejecutar los tests generados
 
 ```bash
 pnpm exec playwright test tests/<pagename>.spec.js --project=chromium
 ```
 
-For E2E:
+Para E2E:
 ```bash
 pnpm exec playwright test tests/e2e/<pagename>.spec.js --project=chromium
 ```
 
-### Step 3.2 — Interpret failures
+### Paso 3.2 — Interpretar fallos
 
-| Failure type | Probable cause | Fix |
+| Tipo de fallo | Causa probable | Fix |
 |--------------|---------------|-----|
-| Element not found | Locator does not match the real DOM | Re-scan with playwright-cli snapshot; update selector |
-| `waitLoad()` timeout | Wrong anchor element | Change `waitLoad()` to a more reliable element |
-| Import error | Wrong path to fixtures | Verify if spec is in `tests/` or `tests/e2e/` and adjust |
-| Fixture not found | Page object not wired in `page.fixtures.js` | Add import and fixture entry |
-| URL mismatch | `this.url` incorrect in page object | Compare with baseURL in `playwright.config.js` |
+| Element not found | El locator no matchea el DOM real | Re-scan con playwright-cli snapshot; actualizar selector |
+| `waitLoad()` timeout | Anchor element equivocado | Cambiar `waitLoad()` a un elemento más confiable |
+| Import error | Path incorrecto a fixtures | Verificar si el spec está en `tests/` o `tests/e2e/` y ajustar |
+| Fixture not found | Page object no wired en `page.fixtures.js` | Agregar import y fixture entry |
+| URL mismatch | `this.url` incorrecto en page object | Comparar con el baseURL de `playwright.config.js` |
 
-### Step 3.3 — Re-scan if selector failures
+### Paso 3.3 — Re-scan si hay fallos de selector
 
-If tests fail and the cause is unclear, re-open the browser:
+Si los tests fallan y la causa no es clara, re-abre el browser:
 
 ```
-Invoke playwright-cli:
-  - Navigate to <FULL_URL>
-  - Take a screenshot to see the visual state
-  - Take a new snapshot to compare selectors
-  - Close browser
+Invoca playwright-cli:
+  - Navegar a <FULL_URL>
+  - Tomar screenshot para ver el estado visual
+  - Tomar nuevo snapshot para comparar selectores
+  - Cerrar browser
 ```
 
 ---
 
-## Complete Example
+## Reglas de Arquitectura (inline — no consultar el skill playwright-architecture)
+
+Estas son las reglas no-negociables. Violar cualquiera produce output incorrecto.
+
+### Regla A: Sin assertions en page objects o E2E utils
+
+Page objects interactúan. Los tests assertan.
+
+```javascript
+// MAL — assertion dentro de action method
+async addToCart() {
+    await this.addButton.click();
+    await expect(this.cartBadge).toHaveText('1'); // VIOLACIÓN
+}
+
+// BIEN
+async addToCart() {
+    await this.addButton.click();
+}
+```
+
+La única `expect()` permitida en page objects o E2E utils es el bridge guard de navegación dentro de `waitLoad()` o un workflow method multi-step, wrapeado en `test.step()`.
+
+### Regla B: Page objects importan `test` de `@playwright/test`
+
+Los page objects usan `test.step()` dentro de `waitLoad()`. Esto requiere importar `test` de `@playwright/test` — no de los fixtures. Este es el único lugar donde un import directo de Playwright es correcto.
+
+```javascript
+// CORRECTO en pages/*.js
+import { test } from '@playwright/test';
+```
+
+### Regla C: Specs nunca importan de `@playwright/test`
+
+```javascript
+// MAL
+import { test, expect } from '@playwright/test'
+
+// BIEN en tests/*.spec.js
+import { test, expect } from '../fixtures/index.fixtures'
+
+// BIEN en tests/e2e/*.spec.js
+import { test, expect } from '../../fixtures/index.fixtures'
+```
+
+### Regla D: Siempre `load()` + `waitLoad()` en `beforeEach`
+
+```javascript
+// MAL — flaky
+await <pageName>Page.load()
+
+// BIEN
+await <pageName>Page.load()
+await <pageName>Page.waitLoad()
+```
+
+### Regla E: Nunca hard-code credentials
+
+```javascript
+// MAL
+await loginPage.submitLoginInForm('standard_user', 'secret_sauce')
+
+// BIEN
+await loginPage.submitLoginInForm(process.env.email, process.env.password)
+```
+
+### Regla F: Nunca `page.goto()` directamente en specs
+
+```javascript
+// MAL
+test('...', async ({ page }) => {
+    await page.goto('/inventory.html')
+})
+
+// BIEN
+test('...', async ({ inventoryPage }) => {
+    await inventoryPage.load()
+})
+```
+
+### Regla G: Toda clase en `pages/` debe tener fixture entry
+
+Cada `pages/<pagename>.js` debe tener su entrada correspondiente en `fixtures/page.fixtures.js`. Nunca dejes este paso incompleto.
+
+---
+
+## Ejemplo completo
 
 **Input:** `/inventory.html` (REQUIRES_AUTH = true)
 
-**Scan produces:**
+**Scan produce:**
 ```
 e1  [heading "Products" level=3]
 e2  [button "Add to cart"]
@@ -395,7 +496,7 @@ e3  [button "Open Menu"]
 e4  [link "Twitter"]
 ```
 
-**Phase 2 generates:**
+**Fase 2 genera:**
 
 `pages/inventory.js`:
 ```javascript
@@ -428,19 +529,19 @@ export class InventoryPage {
 }
 ```
 
-`fixtures/page.fixtures.js` — add:
+`fixtures/page.fixtures.js` — agrega:
 ```javascript
 import { InventoryPage } from '../pages/inventory';
-// inside base.extend():
+// dentro de base.extend():
 inventoryPage: async ({ page }, use) => {
     await use(new InventoryPage(page));
 },
 ```
 
-`utils/e2e.js` — add (because REQUIRES_AUTH = true):
+`utils/e2e.js` — agrega (porque REQUIRES_AUTH = true):
 ```javascript
 import { InventoryPage } from '../pages/inventory';
-// in constructor:
+// en el constructor:
 this.inventoryPage = new InventoryPage(page);
 ```
 
@@ -465,10 +566,11 @@ test.describe('Inventory E2E Suite', () => {
 
 ---
 
-## Final Checklist
+## Checklist final
 
-Before finishing, verify:
+Antes de terminar, verifica todo esto:
 
+<<<<<<< HEAD:.claude/skills/scan-to-scripts/SKILL.md
 - [ ] `pages/<pagename>.js` exists with constructor, `load()`, `waitLoad()`, and at least one action method
 - [ ] All locators use `getByRole()` or `getByLabel()` with `.describe()` chained
 - [ ] No `expect()` inside page object methods (except bridge guard inside `test.step()`)
@@ -488,3 +590,15 @@ After completing the task, if you discovered anything new about this project
 (a selector pattern, an auth behavior, a page structure, a gotcha), append it
 to `.claude/skills/memory/scan-to-scripts.md` in the appropriate section.
 Only record things that are non-obvious and would save future effort.
+=======
+- [ ] `pages/<pagename>.js` existe con constructor, `load()`, `waitLoad()`, y al menos un action method
+- [ ] Todos los locators usan `getByRole()` o `getByLabel()` con `.describe()` encadenado
+- [ ] Sin `expect()` dentro de métodos de page object (salvo bridge guard en `test.step()`)
+- [ ] `fixtures/page.fixtures.js` tiene el import y la fixture entry para la nueva página
+- [ ] El spec importa de `../fixtures/index.fixtures` o `../../fixtures/index.fixtures` (nunca de `@playwright/test`)
+- [ ] `beforeEach` usa `load()` + `waitLoad()`
+- [ ] Sin credentials hard-coded en ningún archivo
+- [ ] Sin llamadas directas a `page.goto()` en specs
+- [ ] `utils/e2e.js` actualizado si `REQUIRES_AUTH = true` o la página es parte de un flujo
+- [ ] Los tests pasan: `pnpm exec playwright test <spec-file> --project=chromium`
+>>>>>>> parent of 9ac0813 (update skill architecture for playwright development):.claude/skills/scan-to-tests/SKILL.md
