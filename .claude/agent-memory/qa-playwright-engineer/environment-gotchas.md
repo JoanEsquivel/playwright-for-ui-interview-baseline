@@ -13,4 +13,4 @@ metadata:
 - 2026-09-08: `--project=ui` (or `e2e`) already runs the `setup` dependency automatically (verified with `--list`: 1 setup + N ui). Adding `--project=setup` is harmless but not required; a missing storage state means `setup` itself failed.
 
 **Why:** each of these cost a wasted command or a red run during the login-spec fix.
-**How to apply:** prefix commands with `corepack pnpm`; always `eval` the real `data-test` value on the live page before changing a locator (see [[user-profile-qa-engineer]] for the standards owner).
+**How to apply:** prefix commands with `corepack pnpm`; always `eval` the real `data-test` value on the live page before changing a locator.
