@@ -1,0 +1,5 @@
+{
+  "userInfo": { "firstName": "Test", "lastName": "User", "postalCode": "12345" },
+  "itemsToBuy": 2,
+  "successMessage": "Thank you for your order!"
+}
