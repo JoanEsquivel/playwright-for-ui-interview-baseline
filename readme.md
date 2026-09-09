@@ -3,8 +3,9 @@
 This repository is the **reference implementation** of a Playwright standards kit and, at the same time, the kit itself (agent, skills and rules under `.claude/`). The UI target (SauceDemo) and the API target (DummyJSON) are **examples only**: every URL and credential comes from `.env`, so the same structure applies to any application.
 
 - Architecture rules: `AGENTS.md` (portable, read by Claude Code, GitHub Copilot and Cursor)
-- Agent skills: `.claude/skills/` · QA agent: `.claude/agents/qa-engineer.md`
-- Design and plans: `docs/superpowers/`
+- Agent skills: `.claude/skills/` · QA agent: `.claude/agents/qa-engineer.md` (Copilot mirror in `.github/agents/`)
+- Path-scoped rules: `.claude/rules/` → mirrored to `.cursor/rules/` and `.github/instructions/` by `pnpm sync:agents`
+- Design, plans and decisions: `docs/`
 
 ---
 
@@ -57,8 +58,18 @@ tests/        setup/ · ui/ · api/ · e2e/
 data/         JSON test data (no credentials)
 ```
 
+## Using the QA agent
+
+```bash
+claude --agent qa-engineer            # Claude Code
+# Copilot: /qa-engineer in VS Code or `copilot --agent qa-engineer`; Cursor: AGENTS.md + skills load automatically
+```
+
+Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI.
+
 ## Quality gates
 
+- `pnpm sync:agents:check` — generated Cursor/Copilot files match `.claude/rules` and `.claude/agents`.
 - `pnpm lint` — ESLint (`eslint-plugin-playwright`, typescript-eslint) + `tsc`. Architecture rules are enforced by lint: no assertions in `pages/` or `api/`, specs import only from the fixtures index, no `page.goto()` in specs, no hard-coded credentials, no `waitForTimeout`, no conditionals in tests.
 
 ## Continuous integration

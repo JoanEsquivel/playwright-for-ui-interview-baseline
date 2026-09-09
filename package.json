@@ -4,7 +4,9 @@
   "private": true,
   "description": "Reference implementation of the Playwright standards kit (UI: saucedemo, API: dummyjson as example targets)",
   "packageManager": "pnpm@10.17.0",
-  "engines": { "node": ">=20.11" },
+  "engines": {
+    "node": ">=20.11"
+  },
   "scripts": {
     "test": "playwright test",
     "test:setup": "playwright test --project=setup",
@@ -18,7 +20,9 @@
     "report:merge": "playwright merge-reports --reporter html ./blob-report",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . && tsc --noEmit",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "sync:agents": "node scripts/sync-agent-config.mjs",
+    "sync:agents:check": "node scripts/sync-agent-config.mjs --check"
   },
   "devDependencies": {
     "@playwright/cli": "0.1.19",

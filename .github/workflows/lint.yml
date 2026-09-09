@@ -16,3 +16,5 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      - name: Generated agent config is up to date
+        run: pnpm sync:agents:check

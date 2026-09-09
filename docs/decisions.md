@@ -56,3 +56,17 @@ Short records of the choices behind this framework and kit. Newest last.
 **Decision:** URLs, credentials, language and package manager are inputs (`.env`, scaffold flags), never constants in skills or templates.
 **Why:** The kit must scaffold and maintain frameworks for any application; the example targets exist only to keep this repository runnable.
 **Consequences:** `grep` for hard-coded targets is part of the kit's verification.
+
+## Appendix — tool compatibility matrix
+
+| Artifact | Claude Code | GitHub Copilot (VS Code / CLI / cloud) | Cursor |
+|---|---|---|---|
+| `AGENTS.md` | via `@AGENTS.md` in `CLAUDE.md` | native (always-on) | native (always-on) |
+| `CLAUDE.md` | native | VS Code reads it | — |
+| `.claude/rules/*.md` (`paths`) | native | VS Code reads them; CLI/cloud use the generated `.github/instructions/*.instructions.md` (`applyTo`) | generated `.cursor/rules/*.mdc` (`globs`) |
+| `.claude/skills/*/SKILL.md` | native | native (`.claude/skills` is a supported location) | native (`.claude/skills` is a supported location) |
+| Agent | `.claude/agents/qa-engineer.md` (skills preloaded, project memory) | generated `.github/agents/qa-engineer.agent.md` | no agent files; `AGENTS.md` + skills cover the role |
+| Lint hook | `.claude/settings.json` `PostToolUse` | — (rely on `pnpm lint` and the Lint workflow) | — (same) |
+| Enforcement | ESLint gates + CI | ESLint gates + CI | ESLint gates + CI |
+
+Generated files carry a `GENERATED` header; `pnpm sync:agents` rewrites them and `pnpm sync:agents:check` fails CI when they drift.

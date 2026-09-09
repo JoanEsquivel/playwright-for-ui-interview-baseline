@@ -15,6 +15,7 @@
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const skillRoot = resolve(here, '..');
@@ -56,7 +57,11 @@ copyTemplates(join(skillRoot, 'templates', lang));
 
 if (withApi) dropApiMarkers();
 else stripApiLayer();
-if (withKit) copyKit();
+if (withKit) {
+  copyKit();
+  const sync = join(target, 'scripts', 'sync-agent-config.mjs');
+  if (existsSync(sync)) execFileSync(process.execPath, [sync], { cwd: target, stdio: 'inherit' });
+}
 
 console.log(`\n✅ Scaffolded ${lang.toUpperCase()} Playwright framework at ${target}`);
 console.log(`
