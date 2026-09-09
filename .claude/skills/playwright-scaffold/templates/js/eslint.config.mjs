@@ -1,21 +1,17 @@
 // Architecture rules are enforced here so every tool (Claude Code, Copilot, Cursor, CI) gets the same gate.
 import { defineConfig } from 'eslint/config';
+import js from '@eslint/js';
 import playwright from 'eslint-plugin-playwright';
-import tseslint from 'typescript-eslint';
 
-const SPEC_FILES = ['tests/**/*.ts'];
-const ACTION_LAYERS = ['pages/**/*.ts', 'api/**/*.ts'];
+const SPEC_FILES = ['tests/**/*.js'];
+const ACTION_LAYERS = ['pages/**/*.js', 'api/**/*.js'];
 
 export default defineConfig([
   {
     ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'blob-report/**', '.playwright-cli/**', '.auth/**', '.claude/**'],
   },
-  ...tseslint.configs.recommendedTypeChecked,
-  {
-    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
-    rules: { '@typescript-eslint/no-floating-promises': 'error' },
-  },
-  { files: ['**/*.mjs'], ...tseslint.configs.disableTypeChecked },
+  js.configs.recommended,
+  { languageOptions: { globals: { process: 'readonly', console: 'readonly' } } },
 
   // ---- Specs: Playwright rules + import/goto/credential gates ----
   { files: SPEC_FILES, ...playwright.configs['flat/recommended'] },
@@ -27,11 +23,10 @@ export default defineConfig([
       'playwright/no-networkidle': 'error',
       'playwright/prefer-web-first-assertions': 'error',
       'playwright/expect-expect': ['error', { assertFunctionNames: ['expect'] }],
-      '@typescript-eslint/no-restricted-imports': ['error', {
+      'no-restricted-imports': ['error', {
         paths: [{
           name: '@playwright/test',
           message: 'Spec files import { test, expect } from the fixtures index, never from @playwright/test.',
-          allowTypeImports: true,
         }],
       }],
       'no-restricted-syntax': ['error',
@@ -46,13 +41,13 @@ export default defineConfig([
       ],
     },
   },
-  { files: ['tests/setup/**/*.ts'], rules: { 'playwright/expect-expect': 'off' } },
+  { files: ['tests/setup/**/*.js'], rules: { 'playwright/expect-expect': 'off' } },
 
   // ---- Action layers: no assertions ----
   {
     files: ACTION_LAYERS,
     rules: {
-      '@typescript-eslint/no-restricted-imports': ['error', {
+      'no-restricted-imports': ['error', {
         paths: [{
           name: '@playwright/test',
           importNames: ['expect'],
