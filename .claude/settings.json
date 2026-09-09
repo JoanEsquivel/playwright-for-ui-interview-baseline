@@ -11,5 +11,25 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm lint*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm sync:agents*)",
+      "Bash(pnpm exec playwright *)",
+      "Bash(pnpm exec playwright-cli *)",
+      "Bash(corepack pnpm lint*)",
+      "Bash(corepack pnpm test*)",
+      "Bash(corepack pnpm exec playwright *)",
+      "Bash(corepack pnpm exec playwright-cli *)",
+      "Bash(npx playwright *)",
+      "Bash(npx playwright-cli *)",
+      "Bash(playwright-cli *)",
+      "Bash(node scripts/*)",
+      "Bash(node .claude/skills/*)",
+      "Bash(curl *)",
+      "Bash(ruby -ryaml *)"
+    ]
   }
 }
