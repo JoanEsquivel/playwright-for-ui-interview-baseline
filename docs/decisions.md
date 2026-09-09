@@ -28,7 +28,7 @@ Short records of the choices behind this framework and kit. Newest last.
 **Consequences:** One schema file per resource; the `toMatchSchema` matcher is defined in the fixtures index.
 
 ## 6. One agent with preloaded skills
-**Decision:** A single `qa-engineer` agent preloads `playwright-architecture` and `playwright-cli` and routes to task skills. No orchestrator/sub-agent hierarchy.
+**Decision:** A single `qa-playwright-engineer` agent preloads `playwright-architecture` and `playwright-cli` and routes to task skills. No orchestrator/sub-agent hierarchy.
 **Why:** The previous orchestrator + three specialists design duplicated rules in four places, cost extra turns and could not be mirrored to Copilot or Cursor.
 **Consequences:** Parallel sub-agents are used only for independent page scans (three or more pages).
 
@@ -65,7 +65,7 @@ Short records of the choices behind this framework and kit. Newest last.
 | `CLAUDE.md` | native | VS Code reads it | — |
 | `.claude/rules/*.md` (`paths`) | native | VS Code reads them; CLI/cloud use the generated `.github/instructions/*.instructions.md` (`applyTo`) | generated `.cursor/rules/*.mdc` (`globs`) |
 | `.claude/skills/*/SKILL.md` | native | native (`.claude/skills` is a supported location) | native (`.claude/skills` is a supported location) |
-| Agent | `.claude/agents/qa-engineer.md` (skills preloaded, project memory) | generated `.github/agents/qa-engineer.agent.md` | no agent files; `AGENTS.md` + skills cover the role |
+| Agent | `.claude/agents/qa-playwright-engineer.md` (skills preloaded, project memory) | generated `.github/agents/qa-playwright-engineer.agent.md` | no agent files; `AGENTS.md` + skills cover the role |
 | Lint hook | `.claude/settings.json` `PostToolUse` | — (rely on `pnpm lint` and the Lint workflow) | — (same) |
 | Enforcement | ESLint gates + CI | ESLint gates + CI | ESLint gates + CI |
 

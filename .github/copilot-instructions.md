@@ -5,5 +5,5 @@ Follow `AGENTS.md` at the repository root: it is the contract for this Playwrigh
 
 - Path-specific rules: `.github/instructions/*.instructions.md` (generated from `.claude/rules/`).
 - Agent skills: `.claude/skills/` (`playwright-architecture`, `playwright-scaffold`, `playwright-create-test`, `playwright-fix-test`, `playwright-delete-test`, `playwright-ci`, `playwright-cli`).
-- Custom agent: `.github/agents/qa-engineer.agent.md`.
+- Custom agent: `.github/agents/qa-playwright-engineer.agent.md`.
 - Definition of done: `lint` clean and the targeted `playwright test` run green; never weaken an assertion to pass a test.

@@ -69,12 +69,14 @@ if (existsSync(rulesDir)) {
 }
 
 // ---- agents → copilot custom agents ----
+const agentNames = [];
 const agentsDir = join(root, '.claude', 'agents');
 if (existsSync(agentsDir)) {
   for (const file of readdirSync(agentsDir).filter((f) => f.endsWith('.md')).sort()) {
     const source = `.claude/agents/${file}`;
     const { data, body } = parseFrontmatter(readFileSync(join(agentsDir, file), 'utf8'));
     const name = data.name ?? basename(file, '.md');
+    agentNames.push(name);
     const skills = Array.isArray(data.skills) ? data.skills : [];
     const preload = skills.length
       ? `\n## Skills\n\nBefore starting any task, load these skills from \`.claude/skills/\` (Copilot discovers them automatically): ${skills.map((s) => `\`${s}\``).join(', ')}. Load the task skill named in the routing table when you reach it.\n`
@@ -91,7 +93,7 @@ if (existsSync(join(root, 'AGENTS.md'))) {
     'Follow `AGENTS.md` at the repository root: it is the contract for this Playwright framework (parameters, layout, non-negotiable rules, test styles).\n\n' +
     '- Path-specific rules: `.github/instructions/*.instructions.md` (generated from `.claude/rules/`).\n' +
     '- Agent skills: `.claude/skills/` (`playwright-architecture`, `playwright-scaffold`, `playwright-create-test`, `playwright-fix-test`, `playwright-delete-test`, `playwright-ci`, `playwright-cli`).\n' +
-    '- Custom agent: `.github/agents/qa-engineer.agent.md`.\n' +
+    (agentNames.length ? `- Custom agent${agentNames.length > 1 ? 's' : ''}: ${agentNames.map((n) => `\`.github/agents/${n}.agent.md\``).join(', ')}.\n` : '') +
     '- Definition of done: `lint` clean and the targeted `playwright test` run green; never weaken an assertion to pass a test.\n';
   emit('.github/copilot-instructions.md', content);
 }

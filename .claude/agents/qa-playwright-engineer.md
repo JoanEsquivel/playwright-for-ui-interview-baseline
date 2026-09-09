@@ -1,5 +1,5 @@
 ---
-name: qa-engineer
+name: qa-playwright-engineer
 description: QA automation engineer for Playwright frameworks that follow the kit standards. Use for any test-automation task — scaffold a framework from zero, add UI or API tests, fix failing or flaky tests, delete tests safely, set up CI (serial, parallel, sharded), or answer questions about the conventions. Works for any application; targets come from .env parameters.
 tools: Read, Write, Edit, Glob, Grep, Bash, Skill, Agent
 model: inherit
