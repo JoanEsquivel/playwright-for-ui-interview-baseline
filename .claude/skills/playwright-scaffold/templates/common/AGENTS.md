@@ -69,4 +69,4 @@ Tags: `@smoke` on every PR, `@regression` on full runs, `@ui`/`@api`/`@e2e` on t
 
 ## Skills and agent
 
-Skills in `.claude/skills/` (`playwright-architecture`, `playwright-create-test`, `playwright-fix-test`, `playwright-delete-test`, `playwright-ci`, `playwright-cli`). Agent: `qa-playwright-engineer` (`.claude/agents/qa-playwright-engineer.md`).
+Skills in `.claude/skills/` (`playwright-architecture`, `playwright-create-test`, `playwright-fix-test`, `playwright-delete-test`, `playwright-ci`, `playwright-cli`). Agent: `qa-playwright-engineer` (`.claude/agents/qa-playwright-engineer.md`). Usage guide: `docs/agent-guide.md`.

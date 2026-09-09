@@ -125,6 +125,7 @@ function copyKit() {
     ['CLAUDE.md', 'CLAUDE.md'],
     ['scripts/lint-changed.sh', 'scripts/lint-changed.sh'],
     ['scripts/sync-agent-config.mjs', 'scripts/sync-agent-config.mjs'],
+    ['docs/agent-guide.md', 'docs/agent-guide.md'],
   ];
   for (const [from, to] of items) {
     const src = join(kitRoot, from);

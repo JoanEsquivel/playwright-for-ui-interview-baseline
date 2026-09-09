@@ -65,7 +65,7 @@ claude --agent qa-playwright-engineer            # Claude Code
 # Copilot: /qa-playwright-engineer in VS Code or `copilot --agent qa-playwright-engineer`; Cursor: AGENTS.md + skills load automatically
 ```
 
-Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI.
+Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI. Invocation per tool and recommended prompts: `docs/agent-guide.md`.
 
 ## Quality gates
 

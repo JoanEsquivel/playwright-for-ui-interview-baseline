@@ -74,4 +74,4 @@ Tags: `@smoke` (runs on every PR), `@regression` (full runs), plus `@ui` / `@api
 | `playwright-ci` | Add or change GitHub Actions: serial, parallel, sharded |
 | `playwright-cli` | Live browser control and `--debug=cli` attach sessions |
 
-Agent: `qa-playwright-engineer` (`.claude/agents/qa-playwright-engineer.md`, mirrored in `.github/agents/`). Invoke with `claude --agent qa-playwright-engineer` or by asking for any QA task.
+Agent: `qa-playwright-engineer` (`.claude/agents/qa-playwright-engineer.md`, mirrored in `.github/agents/`). Invoke with `claude --agent qa-playwright-engineer` or by asking for any QA task. Usage guide and recommended prompts: `docs/agent-guide.md`.
