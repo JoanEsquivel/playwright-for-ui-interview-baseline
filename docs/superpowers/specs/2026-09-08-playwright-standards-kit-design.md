@@ -50,6 +50,7 @@ CLAUDE.md                         # "@AGENTS.md" + short Claude-only section (ag
     playwright-fix-test/          # run → trace → --debug=cli attach → fix → rerun → report app bug if not test bug
     playwright-delete-test/       # orphan-safe deletion checklist
     playwright-ci/                # templates: serial.yml, parallel.yml, sharded.yml + selection guide
+    playwright-locks/             # (added 2026-09-19) test locks, Playwright 1.63+: decide, declare, prove, CI limits; race config + workflow templates
     playwright-cli/               # official, untouched (update via `playwright-cli install --skills`)
 .github/
   agents/qa-engineer.agent.md     # Copilot mirror of the agent

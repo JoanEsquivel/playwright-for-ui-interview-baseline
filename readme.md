@@ -65,7 +65,17 @@ claude --agent qa-playwright-engineer            # Claude Code
 # Copilot: /qa-playwright-engineer in VS Code or `copilot --agent qa-playwright-engineer`; Cursor: AGENTS.md + skills load automatically
 ```
 
-Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI. Invocation per tool and recommended prompts: `docs/agent-guide.md`.
+Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI, protect a shared resource with test locks. Invocation per tool and recommended prompts: `docs/agent-guide.md`.
+
+## Shared resources and test locks
+
+Tests here own the data they change, so the suite needs no lock. When a target has something tests cannot duplicate (one seeded account, a global setting, a one-slot sandbox), Playwright 1.63+ test locks serialise only the tests that touch it:
+
+```ts
+test.describe('Account settings', { tag: ['@e2e'], lock: 'seeded-account' }, () => { /* … */ });
+```
+
+Every participant declares the same name, writers restore the resource in `afterEach`, and the fix is proven with `pnpm exec playwright test --workers=4 --repeat-each=2 --retries=0`. Locks live inside one `playwright test` run: they do not cross shards or CI jobs. Full write-up with the measured race, pitfalls and CI guidance: [`docs/test-locks.md`](docs/test-locks.md); agent procedure: `.claude/skills/playwright-locks/`; runnable tutorial: [playwright-lock-demo](https://github.com/JoanEsquivel/playwright-lock-demo).
 
 ## Quality gates
 
@@ -78,7 +88,7 @@ Ask for any of: create a framework from zero in another directory, add UI/API te
 |---|---|---|
 | `lint.yml` | push / PR | ESLint + typecheck |
 | `playwright-parallel.yml` | push / PR / manual | Default workers; `@smoke` on PRs, full suite on push |
-| `playwright-serial.yml` | manual | `--workers=1` for rate-limited or stateful targets |
+| `playwright-serial.yml` | manual | `--workers=1` for rate-limited targets or suites where everything shares state (a few colliding tests: use test locks instead) |
 | `playwright-sharded.yml` | nightly / manual | 4 shards + blob reports merged into one HTML report |
 
 Required repository secrets: `E2E_USERNAME`, `E2E_PASSWORD`, `API_USERNAME`, `API_PASSWORD`. Optional variables: `BASE_URL`, `API_BASE_URL` (default to the example targets).

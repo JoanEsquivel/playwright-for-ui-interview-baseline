@@ -18,7 +18,7 @@ pnpm test:setup                               # logs in once and writes .auth/us
 |---|---|
 | Claude Code, interactive | `claude --agent qa-playwright-engineer` (the agent drives the whole session), or in any session just describe a QA task and Claude delegates to it |
 | Claude Code, scripted / CI | `claude -p --agent qa-playwright-engineer --permission-mode acceptEdits "<prompt>"` |
-| Claude Code, one skill directly | `/playwright-scaffold`, `/playwright-create-test`, `/playwright-fix-test`, `/playwright-delete-test`, `/playwright-ci` |
+| Claude Code, one skill directly | `/playwright-scaffold`, `/playwright-create-test`, `/playwright-fix-test`, `/playwright-delete-test`, `/playwright-ci`, `/playwright-locks` |
 | GitHub Copilot, VS Code | pick `qa-playwright-engineer` in the chat agent picker, or type `/qa-playwright-engineer <prompt>` |
 | GitHub Copilot CLI | `copilot --agent qa-playwright-engineer --prompt "<prompt>"` |
 | Cursor | no agent file; `AGENTS.md` and the skills load automatically. Describe the task, or pick a skill from the `/` menu (`/playwright-create-test`) |
@@ -77,7 +77,8 @@ tests/ui/login.spec.ts fails on "should show an error for a locked out user". He
 ```
 
 Flaky variant: `It passes on retry about half the time; use --repeat-each and the trace to find the race.`
-Expect: root cause in one sentence, failure class (locator / timing / data / auth / environment / app-bug / flaky), the diff, and a `--repeat-each=3` green run. If the app is wrong it writes a bug report under `bug-reports/` instead of patching the test.
+Collision variant: `It only fails in the full run with several workers and the received value looks like another test's data. Reproduce with --workers=4 --repeat-each=3 --retries=0 together with the specs that write what it reads.`
+Expect: root cause in one sentence, failure class (locator / timing / data / auth / environment / app-bug / contention / flaky), the diff, and a `--repeat-each=3` green run. If the app is wrong it writes a bug report under `bug-reports/` instead of patching the test.
 
 ### Delete tests safely
 
@@ -96,6 +97,15 @@ Set up GitHub Actions: parallel run on pull requests with @smoke only, full suit
 
 Variants: `The target is rate-limited: run serially with one worker.` · `Add firefox and webkit to the nightly run.`
 Expect: workflow files, the composite setup action, the list of secrets and variables to configure, and YAML validation output.
+
+### Shared resources and test locks
+
+```
+tests/e2e/account-settings.spec.ts and tests/e2e/billing.spec.ts both change the one seeded customer account and fail at random in the full run. First check whether each test can own its data; if the account cannot be duplicated, protect it with a test lock on every spec that touches it, make the writers restore it, and prove it with a stress run without retries.
+```
+
+Variants: `Is a lock the right tool here, or should I isolate the data?` · `We shard the nightly run in 4: what happens to the locked tests?` · `Show me the race first: reproduce it without the lock and print the timeline.` · `Review every lock in tests/ and tell me which ones could be removed by isolating data.`
+Expect: the decision (isolate / lock / redesign) with the reason, the lock name and every participant file, the `beforeEach`/`afterEach` restore in writers, the red run without the lock and the green `--workers=4 --repeat-each=2 --retries=0` run with it, and the CI implication (locks do not cross shards or jobs). Requires `@playwright/test` 1.63 or newer.
 
 ### Conventions and reviews
 
@@ -122,6 +132,7 @@ Review tests/e2e/checkout.spec.ts and pages/cart.ts against the standards in AGE
 | "Write some tests for the app" | No target, no outcome; it will ask |
 | Pasting selectors you remember | It must verify on the live page anyway; wrong selectors slow it down |
 | "Make the test pass" | It will not weaken assertions; ask for the root cause instead |
+| "Just run it with one worker" / "add a retry" for tests that collide | Hides the collision and slows everything; ask it to isolate the data or lock the shared resource |
 | Mixing scaffold + tests + CI in one sentence | It will do them in order, but one task per prompt is easier to review |
 
 ## 6. Reading the report
@@ -135,6 +146,9 @@ Every task ends with: files created or modified (paths), the commands it ran wit
 | "This command requires approval" in `-p` mode | The command is not in the `.claude/settings.json` allowlist; add a `Bash(...)` pattern or run interactively |
 | `Missing required environment variable "X"` | Fill it in `.env` (copy from `.env.example`) |
 | Tests redirect to the login page | Storage state is stale: `pnpm test:setup` |
+| A test fails only in the full run, passes alone and on retry, and shows another test's data | Contention on a shared resource: ask for the `playwright-locks` skill; reproduce with `--workers=4 --repeat-each=3 --retries=0` |
+| Locked tests still collide in the sharded or matrix run | Test locks live inside one `playwright test` process; give each shard its own resource or run the locked tests in one non-sharded job |
+| `lock` is rejected by TypeScript | `@playwright/test` is older than 1.63; upgrade |
 | `playwright-cli: command not found` | Use `pnpm exec playwright-cli …` (or `npx playwright-cli …`) |
 | A skill does not show in the `/` menu | Folder name must equal the `name` in `SKILL.md`; in Claude Code run `/reload-plugins` |
 | Copilot or Cursor ignore a rule | Regenerate mirrors with `pnpm sync:agents` (the Lint workflow fails when they drift) |
