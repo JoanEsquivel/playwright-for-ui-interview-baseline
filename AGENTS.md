@@ -29,7 +29,7 @@ pnpm exec playwright-cli open <url>       # live browser: snapshot, click, fill,
 
 ```
 pages/       Page objects: locators (constructor, .describe()), load(), waitLoad(), action methods. No assertions.
-api/         clients/*.client.ts (one class per resource, returns APIResponse) · schemas/*.schema.ts (zod)
+api/         clients/*.client.ts (one class per resource, returns APIResponse<T> typed from the schema) · schemas/*.schema.ts (zod: request + response schemas and their inferred types)
 utils/       e2e.ts (multi-page flows, bridge guards) · env.ts (typed env access)
 fixtures/    page.fixtures.ts · e2e.fixtures.ts · api.fixtures.ts · index.fixtures.ts (mergeTests + toMatchSchema)
 tests/       setup/*.setup.ts · ui/*.spec.ts · api/*.spec.ts · e2e/*.spec.ts
@@ -41,7 +41,7 @@ data/        *.json test data (never credentials)
 
 1. **Assertions live in specs.** `pages/**` and `api/**` never call `expect`. Enforced: `no-restricted-syntax`, `no-restricted-imports`.
 2. **Guards are not assertions.** Allowed outside specs: `locator.waitFor()` inside `waitLoad()`, and one bridge `expect` inside a `utils/e2e.ts` flow method, wrapped in `test.step`, to confirm a page transition.
-3. **Specs import `test`/`expect` only from `fixtures/index.fixtures`.** Never from `@playwright/test` (types excepted). Enforced by lint.
+3. **Specs import `test`/`expect` only from `fixtures/index.fixtures`** (written `@/fixtures/index.fixtures`, see rule 11). Never from `@playwright/test` (types excepted). Enforced by lint.
 4. **Locators are semantic and described.** Order: `getByRole` / `getByLabel` → `[data-test=…]` / `[data-testid=…]` → `getByText`. Never CSS classes or XPath. Always chain `.describe('<Name> <role>')`.
 5. **Verify locators against the live page** with `playwright-cli` (snapshot/eval) before writing or changing them. Never guess from memory.
 6. **No `page.goto()` in specs**; call `<page>.load()` then `<page>.waitLoad()`. Enforced by lint.
@@ -49,6 +49,8 @@ data/        *.json test data (never credentials)
 8. **Tests are isolated and deterministic.** No `waitForTimeout`, no `if` in tests, no order dependence, web-first assertions only. Enforced: `eslint-plugin-playwright`. Each test owns the data it changes; a resource that cannot be duplicated takes the same test lock on **every** test that touches it (`playwright-locks`). Never go serial, retry or sleep to hide a collision.
 9. **Every new page object gets a fixture entry** in `fixtures/page.fixtures.ts`; every API client is wired in `fixtures/api.fixtures.ts`. Orphans are removed on delete.
 10. **Definition of done:** `pnpm lint` clean and the targeted `playwright test` run green, with output shown. Never weaken an assertion to make a test pass; if the app is wrong, file a bug report instead.
+11. **Cross-folder imports use the `@/` alias.** `@/` maps to the repository root through `paths` in `tsconfig.json` (`jsconfig.json` in JS projects): `@/pages/login`, `@/utils/env`, `@/data/cart.json`, `@/playwright.config`. Never `../`; a same-folder `./` import is fine. Enforced: `no-restricted-imports`.
+12. **API bodies are typed from zod.** The schema in `api/schemas` is the only place a shape is written: responses export `z.infer` types, requests and queries `z.input` types. Clients return `APIResponse<T>` with the schema type as default, so specs read `const cart = await response.json()` already typed and prove it with `toMatchSchema`; a negative case passes the contract it expects (`getById<ErrorResponse>(id)`). Never `: unknown`, `any` or an `as` cast on a body; never an `interface` for a payload in `api/clients`. Enforced: `no-restricted-syntax`, `no-unsafe-*`, `tsc`. Alternatives and rationale: `docs/api-typing.md`.
 
 ## Choosing a test style
 

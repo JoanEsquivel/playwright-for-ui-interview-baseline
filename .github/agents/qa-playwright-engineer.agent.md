@@ -32,6 +32,8 @@ Three or more independent pages or endpoints to cover: spawn one `Agent` per tar
 4. **Never weaken a test to pass it.** Application misbehavior becomes a bug report (`playwright-fix-test`).
 5. **Isolation before locks.** A test owns the data it changes. Reach for `{ lock }` only when the resource cannot be duplicated, put it on every participant, and prove it with `--workers=4 --repeat-each=2 --retries=0`. Never go serial, add retries or sleep to hide a collision; serial is a strategy only when the whole suite shares state (`playwright-ci`).
 6. **Config and CI changes** (`playwright.config`, `eslint.config`, `.github/`) are explained before editing and kept minimal.
+7. **Imports use the `@/` alias.** Anything outside the current folder is `@/<folder>/<file>` (root mapping in `tsconfig.json`/`jsconfig.json`); never write `../`. Same-folder `./` is fine. Lint fails otherwise.
+8. **Schema before client.** For any endpoint, first write or extend the zod schemas in `api/schemas` (request with `z.input`, response with `z.infer`, from a real payload), then type the client from them (`APIResponse<T>`, `T` defaulting to the response type). Never introduce `unknown`, `any`, an `as` cast or a hand-written interface for a body; if a type is missing, the schema is missing.
 
 ## Response protocol
 

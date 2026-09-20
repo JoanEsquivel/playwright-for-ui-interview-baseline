@@ -32,7 +32,7 @@ Read them only through `utils/env` (`env.BASE_URL`, …). If a value is missing,
 ```
 pages/       Page objects: locators (.describe()), load(), waitLoad(), actions. No assertions.
 # @api-start
-api/         clients/*.client (raw APIResponse) · schemas/*.schema (zod)
+api/         clients/*.client (raw APIResponse<T>, typed from the schema) · schemas/*.schema (zod: request + response schemas and inferred types)
 # @api-end
 utils/       e2e (multi-page flows, bridge guard) · env (typed env access)
 fixtures/    page · e2e · api → index.fixtures (mergeTests + toMatchSchema); only spec import
@@ -45,7 +45,7 @@ data/        *.json test data (never credentials)
 
 1. Assertions live in specs. `pages/**` and `api/**` never call `expect`. (lint)
 2. Guards are not assertions: `waitFor()` inside `waitLoad()`, and one bridge `expect` inside a `utils/e2e` flow, wrapped in `test.step`.
-3. Specs import `test`/`expect` only from `fixtures/index.fixtures`. (lint)
+3. Specs import `test`/`expect` only from `fixtures/index.fixtures`, written `@/fixtures/index.fixtures`. (lint)
 4. Locators: `getByRole`/`getByLabel` → `[data-test]`/`[data-testid]` → `getByText`; always `.describe()`. Never CSS classes or XPath.
 5. Verify locators on the live page with `playwright-cli` before writing or changing them.
 6. No `page.goto()` in specs; use `<page>.load()` + `waitLoad()`. (lint)
@@ -53,6 +53,10 @@ data/        *.json test data (never credentials)
 8. Isolated, deterministic tests: no `waitForTimeout`, no `if` in tests, web-first assertions, tags on every test. (lint) Each test owns the data it changes; a resource that cannot be duplicated takes the same test lock on every test that touches it (`playwright-locks`). Never go serial, retry or sleep to hide a collision.
 9. Every page object gets a fixture entry; every client is wired in the api fixture. Orphans are removed on delete.
 10. Done = `lint` clean and the targeted `playwright test` run green. Never weaken an assertion; file a bug report instead.
+11. Cross-folder imports use the `@/` alias, mapped to the project root by `paths` in `tsconfig.json`/`jsconfig.json` (`@/pages/login`, `@/utils/env`, `@/data/<feature>.json`). Never `../`; same-folder `./` is fine. (lint)
+# @api-start
+12. API bodies are typed from zod. Shapes are written once in `api/schemas` (responses `z.infer`, requests `z.input`); clients return `APIResponse<T>` defaulting to the schema type; specs read the typed body and prove it with `toMatchSchema`; negative cases pass the expected contract (`login<ErrorResponse>(…)`). Never `: unknown`, `any`, an `as` cast or a hand-written interface for a body. (lint)
+# @api-end
 
 ## Choosing a test style
 

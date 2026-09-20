@@ -60,8 +60,8 @@ export const env = {
 
 ```ts
 import { expect, test, type Page } from '@playwright/test';
-import { LoginPage } from '../pages/login';
-import { <LandingPage> } from '../pages/<landing>';
+import { LoginPage } from '@/pages/login';
+import { <LandingPage> } from '@/pages/<landing>';
 import { env } from './env';
 
 export class E2E {
@@ -92,7 +92,7 @@ export class E2E {
 
 ```ts
 import { test as base } from '@playwright/test';
-import { <PageName>Page } from '../pages/<page>';
+import { <PageName>Page } from '@/pages/<page>';
 
 export interface PageFixtures { <pageName>Page: <PageName>Page }
 
@@ -105,7 +105,7 @@ export const pageFixture = base.extend<PageFixtures>({
 
 ```ts
 import { test as base } from '@playwright/test';
-import { E2E } from '../utils/e2e';
+import { E2E } from '@/utils/e2e';
 export interface E2EFixtures { e2e: E2E }
 export const e2eFixture = base.extend<E2EFixtures>({
   e2e: async ({ page }, use) => { await use(new E2E(page)); },
@@ -139,8 +139,8 @@ export const expect = baseExpect.extend({
 ## Setup `tests/setup/auth.setup.ts`
 
 ```ts
-import { test as setup } from '../../fixtures/index.fixtures';
-import { STORAGE_STATE } from '../../playwright.config';
+import { test as setup } from '@/fixtures/index.fixtures';
+import { STORAGE_STATE } from '@/playwright.config';
 
 setup('authenticate and save storage state', async ({ e2e, page }) => {
   await e2e.login();
@@ -151,8 +151,8 @@ setup('authenticate and save storage state', async ({ e2e, page }) => {
 ## E2E spec `tests/e2e/<feature>.spec.ts`
 
 ```ts
-import { test, expect } from '../../fixtures/index.fixtures';
-import data from '../../data/<feature>.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/<feature>.json';
 
 test.describe('<Feature>', { tag: ['@e2e'] }, () => {
   test.beforeEach(async ({ <landingPage> }) => {
@@ -174,7 +174,15 @@ test.describe('<Feature>', { tag: ['@e2e'] }, () => {
 
 ## `eslint.config.mjs`
 
-Copy from the reference repository root; it defines the architecture gates (`no-restricted-imports`, `no-restricted-syntax`) for `tests/**`, `pages/**` and `api/**`.
+Copy from the reference repository root; it defines the architecture gates (`no-restricted-imports`, `no-restricted-syntax`) for `tests/**`, `pages/**` and `api/**`, and the `NO_PARENT_IMPORTS` pattern that rejects `../` everywhere. Flat config replaces a rule's options per file, so that pattern is repeated in every `no-restricted-imports` block; keep it that way when adding a block.
+
+## `tsconfig.json` — the `@/` alias
+
+```json
+{ "compilerOptions": { "paths": { "@/*": ["./*"] } } }
+```
+
+One root mapping, no `baseUrl`. `tsc`, typed ESLint and the Playwright runtime all read it, so nothing else is installed. It covers JSON data (`@/data/<feature>.json`, extension included) and the config (`@/playwright.config`).
 
 ## `.env.example`
 

@@ -47,7 +47,7 @@ export class <PageName>Page {
 
 ```js
 import { test as base } from '@playwright/test';
-import { <PageName>Page } from '../pages/<page>';
+import { <PageName>Page } from '@/pages/<page>';
 
 export const pageFixture = base.extend({
   <pageName>Page: async ({ page }, use) => { await use(new <PageName>Page(page)); },
@@ -97,7 +97,31 @@ export const env = {
 
 ## Spec
 
-Identical to TS except the import path ends in `.fixtures` (no extension) and there are no type annotations. `const body = await response.json();` then `expect(body).toMatchSchema(Schema)`.
+Identical to TS except the import path ends in `.fixtures` (no extension) and there are no type annotations. The `@/` alias works the same way: Playwright reads `"paths": { "@/*": ["./*"] }` from `jsconfig.json` when there is no `tsconfig.json`, and editors use it for navigation. `const cart = await response.json();` then `expect(cart).toMatchSchema(CartSchema)`, then business rules on `cart`.
+
+## API typing (JS)
+
+Same rule as TS: the zod schema is the only place a shape is written, and types are inferred from it through JSDoc, which `checkJs` and editors read.
+
+```js
+// api/schemas/<resource>.schema.js
+export const <Resource>Schema = z.object({ id: z.number().int().positive(), name: z.string().min(1) });
+/** @typedef {z.infer<typeof <Resource>Schema>} <Resource> */
+
+export const Create<Resource>RequestSchema = z.object({ name: z.string().min(1) });
+/** @typedef {z.input<typeof Create<Resource>RequestSchema>} Create<Resource>Request */
+
+// api/clients/<resource>.client.js
+/**
+ * @param {import('@/api/schemas/<resource>.schema').Create<Resource>Request} payload
+ * @returns {Promise<import('@playwright/test').APIResponse<import('@/api/schemas/<resource>.schema').<Resource>>>}
+ */
+async create(payload) {
+  return this.request.post('/<resources>', { data: payload });
+}
+```
+
+Never describe a payload with a hand-written `@typedef {{ id: number }}`; infer it. A fixture that needs a value from a response parses it: `LoginResponseSchema.parse(await response.json()).accessToken`.
 
 ## `eslint.config.mjs` (JS)
 
@@ -108,24 +132,31 @@ import playwright from 'eslint-plugin-playwright';
 
 const SPEC_FILES = ['tests/**/*.js'];
 const ACTION_LAYERS = ['pages/**/*.js', 'api/**/*.js'];
+// Repeated in every no-restricted-imports block: flat config replaces options per file, it does not merge them.
+const NO_PARENT_IMPORTS = { regex: '^\\.\\./', message: "Use the '@/' alias for imports outside the current folder; './' is fine." };
 
 export default defineConfig([
   { ignores: ['node_modules/**', 'test-results/**', 'playwright-report/**', 'blob-report/**', '.playwright-cli/**', '.auth/**'] },
   js.configs.recommended,
+  { rules: {
+      'no-restricted-imports': ['error', { patterns: [NO_PARENT_IMPORTS] }],
+      // Playwright fixtures that take no dependencies must still destructure: `async ({}, use) => …`.
+      'no-empty-pattern': ['error', { allowObjectPatternsAsParameters: true }],
+  } },
   { files: SPEC_FILES, ...playwright.configs['flat/recommended'] },
   { files: SPEC_FILES, rules: {
       'playwright/no-conditional-in-test': 'error',
       'playwright/no-wait-for-timeout': 'error',
       'playwright/no-networkidle': 'error',
       'playwright/prefer-web-first-assertions': 'error',
-      'no-restricted-imports': ['error', { paths: [{ name: '@playwright/test', message: 'Import test/expect from the fixtures index.' }] }],
+      'no-restricted-imports': ['error', { paths: [{ name: '@playwright/test', message: 'Import test/expect from the fixtures index.' }], patterns: [NO_PARENT_IMPORTS] }],
       'no-restricted-syntax': ['error',
         { selector: "CallExpression[callee.property.name='goto']", message: 'Use <pageName>.load().' },
         { selector: "CallExpression[callee.property.name=/^(login|submitLoginForm)$/] > Literal[value=/.+/]", message: 'Never hard-code credentials.' }],
   } },
   { files: ['tests/setup/**/*.js'], rules: { 'playwright/expect-expect': 'off' } },
   { files: ACTION_LAYERS, rules: {
-      'no-restricted-imports': ['error', { paths: [{ name: '@playwright/test', importNames: ['expect'], message: 'Assertions live in specs.' }] }],
+      'no-restricted-imports': ['error', { paths: [{ name: '@playwright/test', importNames: ['expect'], message: 'Assertions live in specs.' }], patterns: [NO_PARENT_IMPORTS] }],
       'no-restricted-syntax': ['error', { selector: "CallExpression[callee.name='expect'], CallExpression[callee.object.name='expect']", message: 'No assertions in page objects or API clients.' }],
   } },
 ]);

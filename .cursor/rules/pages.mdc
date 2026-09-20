@@ -15,6 +15,7 @@ One class per page or feature area. It owns locators and actions; it never owns 
 - Action methods: verb + noun (`submitLoginForm`, `addItemsToCart`), take all data as parameters, return data only when the test needs it.
 - Only `test` is imported from `@playwright/test` (for `test.step`). Never `expect`. Enforced by `no-restricted-imports` and `no-restricted-syntax`.
 - No test data, no credentials, no `process.env` reads inside page objects.
+- An import from another folder uses the `@/` alias, never `../`; a sibling page object is `./<page>`. Enforced by lint.
 
 ```ts
 // WRONG — assertion inside an action

@@ -1,5 +1,5 @@
-import { test, expect } from '../../fixtures/index.fixtures';
-import data from '../../data/cart.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/cart.json';
 
 test.describe('Cart page', { tag: ['@ui'] }, () => {
   let addedItemNames: string[] = [];

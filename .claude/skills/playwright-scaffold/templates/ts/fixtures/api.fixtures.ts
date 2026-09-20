@@ -1,6 +1,7 @@
 import { test as base, request, type APIRequestContext } from '@playwright/test';
-import { AuthClient } from '../api/clients/auth.client';
-import { env } from '../utils/env';
+import { AuthClient } from '@/api/clients/auth.client';
+import { LoginResponseSchema } from '@/api/schemas/auth.schema';
+import { env } from '@/utils/env';
 
 export interface ApiClients {
   auth: AuthClient;
@@ -35,7 +36,7 @@ export const apiFixture = base.extend<ApiFixtures, ApiWorkerFixtures>({
       if (!response.ok()) {
         throw new Error(`API login failed: ${response.status()} ${await response.text()}`);
       }
-      const { accessToken } = (await response.json()) as { accessToken: string };
+      const { accessToken } = LoginResponseSchema.parse(await response.json());
       await context.dispose();
       await use(accessToken);
     },

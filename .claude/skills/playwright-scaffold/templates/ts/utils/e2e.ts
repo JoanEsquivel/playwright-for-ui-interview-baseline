@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
-import { LoginPage } from '../pages/login';
-import { HomePage } from '../pages/home';
+import { LoginPage } from '@/pages/login';
+import { HomePage } from '@/pages/home';
 import { env } from './env';
 
 /**

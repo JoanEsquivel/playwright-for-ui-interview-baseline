@@ -5,6 +5,30 @@ import tseslint from 'typescript-eslint';
 
 const SPEC_FILES = ['tests/**/*.ts'];
 const ACTION_LAYERS = ['pages/**/*.ts', 'api/**/*.ts'];
+// Flat config replaces a rule's options per file instead of merging them, so every
+// no-restricted-imports block below repeats this pattern.
+const NO_PARENT_IMPORTS = {
+  regex: '^\\.\\./',
+  message: "Use the '@/' alias for imports outside the current folder; './' is fine.",
+};
+// The same applies to no-restricted-syntax: a block that sets it must list every selector it needs.
+const NO_ASSERTIONS = {
+  selector: "CallExpression[callee.name='expect'], CallExpression[callee.object.name='expect']",
+  message: 'No assertions in page objects or API clients. Use waitFor() guards inside waitLoad() only.',
+};
+// API bodies are typed from the zod schemas in api/schemas, never by annotation, cast or hand-written shape.
+const NO_UNKNOWN_BODY = {
+  selector: "VariableDeclarator[id.typeAnnotation.typeAnnotation.type='TSUnknownKeyword']",
+  message: 'Do not annotate a body as unknown. The client types it from the zod schema: `const cart = await response.json()`, then `expect(cart).toMatchSchema(CartSchema)`.',
+};
+const NO_TYPE_CASTS = {
+  selector: "TSAsExpression:not([typeAnnotation.typeName.name='const'])",
+  message: 'Do not cast. Get the type from the zod schema: a typed client (`APIResponse<X>`) or `XSchema.parse(value)`.',
+};
+const NO_HANDWRITTEN_SHAPES = {
+  selector: 'TSInterfaceDeclaration, TSTypeAliasDeclaration > TSTypeLiteral',
+  message: 'Request and response shapes live in api/schemas as zod schemas. Import the inferred type (z.infer for responses, z.input for requests).',
+};
 
 export default defineConfig([
   {
@@ -13,7 +37,10 @@ export default defineConfig([
   ...tseslint.configs.recommendedTypeChecked,
   {
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
-    rules: { '@typescript-eslint/no-floating-promises': 'error' },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-restricted-imports': ['error', { patterns: [NO_PARENT_IMPORTS] }],
+    },
   },
   { files: ['**/*.mjs'], ...tseslint.configs.disableTypeChecked },
 
@@ -33,6 +60,7 @@ export default defineConfig([
           message: 'Spec files import { test, expect } from the fixtures index, never from @playwright/test.',
           allowTypeImports: true,
         }],
+        patterns: [NO_PARENT_IMPORTS],
       }],
       'no-restricted-syntax': ['error',
         {
@@ -43,6 +71,8 @@ export default defineConfig([
           selector: "CallExpression[callee.property.name=/^(login|submitLoginForm)$/] > Literal[value=/.+/]",
           message: 'Never hard-code credentials. Read them from utils/env or a data file.',
         },
+        NO_UNKNOWN_BODY,
+        NO_TYPE_CASTS,
       ],
     },
   },
@@ -58,11 +88,13 @@ export default defineConfig([
           importNames: ['expect'],
           message: 'Assertions live in specs. Page objects and API clients only interact.',
         }],
+        patterns: [NO_PARENT_IMPORTS],
       }],
-      'no-restricted-syntax': ['error', {
-        selector: "CallExpression[callee.name='expect'], CallExpression[callee.object.name='expect']",
-        message: 'No assertions in page objects or API clients. Use waitFor() guards inside waitLoad() only.',
-      }],
+      'no-restricted-syntax': ['error', NO_ASSERTIONS],
     },
   },
+
+  // ---- API bodies typed from zod: no hand-written shapes in clients, no casts in fixtures ----
+  { files: ['api/clients/**/*.ts'], rules: { 'no-restricted-syntax': ['error', NO_ASSERTIONS, NO_HANDWRITTEN_SHAPES] } },
+  { files: ['fixtures/**/*.ts'], rules: { 'no-restricted-syntax': ['error', NO_UNKNOWN_BODY, NO_TYPE_CASTS] } },
 ]);

@@ -44,8 +44,10 @@ Use `expect.soft()` when several independent facts on one screen should all be r
 ## API assertions order
 
 1. `expect(response.status()).toBe(<code>)`
-2. `const body: unknown = await response.json(); expect(body).toMatchSchema(Schema)`
-3. Business rules on `Schema.parse(body)`
+2. `const cart = await response.json(); expect(cart).toMatchSchema(CartSchema)` — the client already types the body from the zod schema (`APIResponse<Cart>`); the matcher proves that type at runtime. Never `: unknown`, never an `as` cast (lint).
+3. Business rules directly on `cart`. No second `parse`: nothing reads a property before step 2 has passed.
+
+A hook or fixture that needs a value from a response is not a spec assertion, so it parses instead: `OrderSchema.parse(await response.json()).id`. It throws with the zod path if the precondition is broken.
 
 ## When a test fails
 

@@ -1,5 +1,5 @@
-import { test, expect } from '../../fixtures/index.fixtures';
-import data from '../../data/checkout.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/checkout.json';
 
 test.describe('Checkout', { tag: ['@e2e'] }, () => {
   test.beforeEach(async ({ inventoryPage }) => {

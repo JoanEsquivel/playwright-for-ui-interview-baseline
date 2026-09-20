@@ -1,6 +1,6 @@
-import { test, expect } from '../../fixtures/index.fixtures';
-import { env } from '../../utils/env';
-import data from '../../data/login.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import { env } from '@/utils/env';
+import data from '@/data/login.json';
 
 // Login tests must start logged out: override the project's storageState.
 test.use({ storageState: { cookies: [], origins: [] } });

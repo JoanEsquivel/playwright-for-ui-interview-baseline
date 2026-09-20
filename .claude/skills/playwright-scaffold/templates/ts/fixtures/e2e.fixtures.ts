@@ -1,5 +1,5 @@
 import { test as base } from '@playwright/test';
-import { E2E } from '../utils/e2e';
+import { E2E } from '@/utils/e2e';
 
 export interface E2EFixtures {
   e2e: E2E;

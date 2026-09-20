@@ -5,10 +5,12 @@ applyTo: "fixtures/**,utils/**"
 # Fixtures and flows (`fixtures/**`, `utils/**`)
 
 - `fixtures/page.fixtures.ts`: one entry per page object, typed through the `PageFixtures` interface. `fixtures/e2e.fixtures.ts`: the `e2e` flow class. `fixtures/api.fixtures.ts`: `api`, `authedApi`, worker-scoped `authToken`.
-- `fixtures/index.fixtures.ts`: `mergeTests(...)` plus `expect = baseExpect.extend({ toMatchSchema })`. No other logic. It is the only import source for specs.
+- `fixtures/index.fixtures.ts`: `mergeTests(...)` plus `expect = baseExpect.extend({ toMatchSchema })`. No other logic. It is the only import source for specs, as `@/fixtures/index.fixtures`.
+- Imports from another folder use the `@/` alias (`@/pages/login`, `@/api/clients/auth.client`, `@/utils/env`); same-folder imports stay `./`. Never `../`. Enforced by lint. `@/` maps to the repo root through `paths` in `tsconfig.json` (`jsconfig.json` in JS projects).
 - `utils/env.ts`: the only place that reads `process.env`. Add a lazy getter per new variable and document it in `.env.example` and `AGENTS.md`.
 - `utils/e2e.ts`: multi-page flow methods composed from page-object actions. Never call `this.page.goto` or raw locators here.
 - The bridge guard: a flow method may contain one `await expect(nextPage.anchor).toBeVisible()` inside `test.step` to confirm a transition. It is the only `expect` allowed outside specs and is never a business assertion.
+- A fixture that needs a value from a response parses it with the schema (`LoginResponseSchema.parse(await response.json()).accessToken`). Never an `as` cast or a hand-written shape. Enforced by lint. `unknown` has one legitimate home: the `received` parameter of `toMatchSchema`, which is a validation boundary.
 - Fixture setup failures throw plain `Error`s with actionable messages (for example a failed API login); they do not use `expect`.
 - Worker scope for expensive, shareable state (tokens); test scope for anything that touches page state.
 

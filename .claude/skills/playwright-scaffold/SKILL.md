@@ -71,4 +71,4 @@ Both must pass before reporting completion. Show the output.
 
 ## What the generated project contains
 
-`playwright.config` (projects `setup`, `api`, `ui`, `e2e`, browser matrix through `BROWSERS`), `utils/env`, `utils/e2e`, `pages/{login,home}`, `fixtures/{page,e2e,api,index}` with `toMatchSchema`, `api/clients/auth.client`, `api/schemas/auth.schema`, smoke specs for UI and API, ESLint architecture gates, `.github/actions/setup-playwright`, `lint.yml`, `playwright-parallel.yml`, `AGENTS.md`, `readme.md`, `.env.example`, `.gitignore`, and (unless `--no-kit`) the agent kit.
+`playwright.config` (projects `setup`, `api`, `ui`, `e2e`, browser matrix through `BROWSERS`), `utils/env`, `utils/e2e`, `pages/{login,home}`, `fixtures/{page,e2e,api,index}` with `toMatchSchema`, `api/clients/auth.client`, `api/schemas/auth.schema`, smoke specs for UI and API, the `@/` import alias (`paths` in `tsconfig.json`/`jsconfig.json`), ESLint architecture gates (including the ban on `../` imports), `.github/actions/setup-playwright`, `lint.yml`, `playwright-parallel.yml`, `AGENTS.md`, `readme.md`, `.env.example`, `.gitignore`, and (unless `--no-kit`) the agent kit.

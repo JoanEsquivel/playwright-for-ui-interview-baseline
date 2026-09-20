@@ -5,7 +5,8 @@ paths:
 
 # Specs (`tests/**`)
 
-- Import only from the fixtures index: `import { test, expect } from '../../fixtures/index.fixtures'`. Never from `@playwright/test` (type imports excepted). Enforced by lint.
+- Import only from the fixtures index: `import { test, expect } from '@/fixtures/index.fixtures'`. Never from `@playwright/test` (type imports excepted). Enforced by lint.
+- Every import outside the spec's own folder uses the `@/` alias (`@/utils/env`, `@/api/schemas/<resource>.schema`, `@/data/<feature>.json`). Never `../`. Enforced by lint.
 - Location by style: `tests/ui` single page, `tests/api` endpoints, `tests/e2e` multi-page flows, `tests/setup` auth. Name `<feature>.spec.ts`.
 - `test.describe('<Feature>', { tag: ['@ui' | '@api' | '@e2e'] }, …)`; tag each test `@smoke` or `@regression`.
 - `beforeEach` loads the page through the page object: `await page.load(); await page.waitLoad();` inside `test.step`. Never `page.goto()` in specs. Enforced by lint.
@@ -15,19 +16,34 @@ paths:
 - Credentials from `utils/env` (`env.E2E_USERNAME`); other data from `data/*.json`. Never string literals for credentials. Enforced by lint.
 - `tests/ui/login.spec.ts`-style specs that must start logged out declare `test.use({ storageState: { cookies: [], origins: [] } })`.
 - A test owns the data it changes. A resource that cannot be duplicated takes `{ tag: [… , '@locked'], lock: '<resource-name>' }` on **every** participant, restored in the writer's `afterEach`; never serial mode, `--workers=1`, retries or sleeps to hide a collision. See `playwright-locks`.
-- API specs: assert status first, then `expect(body).toMatchSchema(Schema)`, then business rules on `Schema.parse(body)`. Type the payload as `unknown` before matching.
+- API specs: assert status first, then read the body with no annotation (`const cart = await response.json()`; the client types it from the zod schema), then `expect(cart).toMatchSchema(CartSchema)`, then business rules directly on `cart`. Never read a property before `toMatchSchema` has passed: the static type is the client's claim, the matcher is its proof.
+- Never write `: unknown`, `any` or an `as` cast on a body, and never re-parse it to get a type. A negative case names the contract it expects: `api.products.getById<ErrorResponse>(id)`. Enforced by lint.
 - Never weaken an assertion to make a test pass. If the application is wrong, write a bug report (see `playwright-fix-test`).
 
 ```ts
 // WRONG
 import { test, expect } from '@playwright/test';
+import data from '../../data/cart.json';
 test('x', async ({ page }) => { await page.goto('/cart'); });
 
 // CORRECT
-import { test, expect } from '../../fixtures/index.fixtures';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/cart.json';
 test('should show cart items', { tag: ['@smoke'] }, async ({ cartPage }) => {
   await cartPage.load();
   await cartPage.waitLoad();
   await expect(cartPage.cartItems).toHaveCount(2);
 });
+```
+
+```ts
+// WRONG — untyped body, validated twice
+const body: unknown = await response.json();
+expect(body).toMatchSchema(CartSchema);
+expect(CartSchema.parse(body).userId).toBe(data.cart.userId);
+
+// CORRECT — typed by the client from the zod schema, proven once
+const cart = await response.json();          // Cart = z.infer<typeof CartSchema>
+expect(cart).toMatchSchema(CartSchema);
+expect(cart.userId).toBe(data.cart.userId);
 ```

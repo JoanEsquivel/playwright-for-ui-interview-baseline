@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/index.fixtures';
+import { test, expect } from '@/fixtures/index.fixtures';
 
 test.describe('Home page', { tag: ['@ui'] }, () => {
   test.beforeEach(async ({ homePage }) => {

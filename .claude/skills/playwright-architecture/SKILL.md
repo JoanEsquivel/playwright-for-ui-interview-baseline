@@ -11,8 +11,8 @@ Language: TypeScript by default (`references/js-variant.md` for JavaScript). Run
 
 ```
 pages/<page>.ts              Page object: locators + load() + waitLoad() + actions. No assertions.
-api/clients/<res>.client.ts  One class per resource; methods return APIResponse. No assertions.
-api/schemas/<res>.schema.ts  zod schemas + inferred types.
+api/clients/<res>.client.ts  One class per resource; methods return APIResponse<T> typed from the schema. No assertions.
+api/schemas/<res>.schema.ts  zod request + response schemas; every type is inferred (z.infer / z.input). Only place a shape is written.
 utils/env.ts                 Lazy typed getters over process.env (only place that reads it).
 utils/e2e.ts                 Multi-page flows composed from page actions (+ bridge guard).
 fixtures/page.fixtures.ts    base.extend<PageFixtures>({ <name>Page: … })
@@ -29,13 +29,14 @@ eslint.config.mjs            architecture gates
 ## Rules (summary; full rationale in `AGENTS.md` and `references/guards-and-assertions.md`)
 
 1. Assertions only in specs. Guards (`waitFor` in `waitLoad()`, one bridge `expect` in a flow) are the only exceptions.
-2. Specs import `test`/`expect` from `fixtures/index.fixtures` only.
+2. Specs import `test`/`expect` from `@/fixtures/index.fixtures` only. Every cross-folder import uses the `@/` alias (root `paths` mapping in `tsconfig.json`/`jsconfig.json`); never `../`, same-folder `./` is fine.
 3. Locators: `getByRole`/`getByLabel` → `[data-test]`/`[data-testid]` → `getByText`; always `.describe()`. Verify on the live page with `playwright-cli` first.
 4. `load()` + `waitLoad()` instead of `page.goto()` in specs.
 5. Credentials via `env.*`; other data via `data/*.json`.
 6. Isolated, deterministic tests: no `waitForTimeout`, no conditionals, web-first assertions, tags on every test. A resource that cannot be isolated takes a `{ lock: '<resource-name>' }` on every test that touches it (`playwright-locks`).
 7. Every page object/client is a fixture; orphans are removed on delete.
 8. Done = `lint` clean + targeted run green.
+9. API bodies are typed from zod: schema first, clients return `APIResponse<T>` defaulting to the `z.infer` type, requests take `z.input` types, specs read the typed body and prove it with `toMatchSchema`. Never `unknown`, `any`, `as` or an `interface` for a payload (`references/api-layer.md`).
 
 ## Canonical shapes (TypeScript)
 
@@ -76,8 +77,8 @@ Fixture entry (`fixtures/page.fixtures.ts`): add `<pageName>Page: <PageName>Page
 UI spec (`tests/ui/<feature>.spec.ts`):
 
 ```ts
-import { test, expect } from '../../fixtures/index.fixtures';
-import data from '../../data/<feature>.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/<feature>.json';
 
 test.describe('<Feature>', { tag: ['@ui'] }, () => {
   test.beforeEach(async ({ <pageName>Page }) => {
@@ -101,11 +102,11 @@ API client + schema + spec: see `references/api-layer.md`. E2E flow, setup and t
 | File | Owns | Must not contain |
 |---|---|---|
 | `pages/*.ts` | locators, `load`, `waitLoad`, actions | `expect`, test data, `process.env` |
-| `api/clients/*.ts` | HTTP calls returning `APIResponse` | `expect`, parsing, hosts |
-| `api/schemas/*.ts` | zod schemas, inferred types | requests |
+| `api/clients/*.ts` | HTTP calls returning `APIResponse<T>`, typed from the schemas | `expect`, parsing, hosts, `interface`/type literals, `any`, casts |
+| `api/schemas/*.ts` | zod schemas for requests and responses, inferred types (`z.infer`, `z.input`) | HTTP calls, hand-written types, `transform`/`default`/`coerce` in response schemas |
 | `utils/e2e.ts` | multi-page flows, bridge guard | raw locators, `page.goto` |
 | `fixtures/*.ts` | wiring, `toMatchSchema` | business logic |
-| `tests/**` | `describe`/`step`/`expect`, tags | `page.goto`, `@playwright/test` import, literal credentials |
+| `tests/**` | `describe`/`step`/`expect`, tags | `page.goto`, `@playwright/test` import, `../` imports, literal credentials, `: unknown` or `as` on a body |
 | `data/*.json` | expected texts, inputs, ids | credentials |
 | `playwright.config.ts` | projects, reporters, `baseURL` from env | test logic |
 

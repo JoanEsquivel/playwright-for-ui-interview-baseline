@@ -1,6 +1,6 @@
 import { test as base } from '@playwright/test';
-import { LoginPage } from '../pages/login';
-import { HomePage } from '../pages/home';
+import { LoginPage } from '@/pages/login';
+import { HomePage } from '@/pages/home';
 
 export interface PageFixtures {
   loginPage: LoginPage;

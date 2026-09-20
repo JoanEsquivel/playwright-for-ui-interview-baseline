@@ -1,6 +1,7 @@
 import { test as base, request } from '@playwright/test';
-import { AuthClient } from '../api/clients/auth.client';
-import { env } from '../utils/env';
+import { AuthClient } from '@/api/clients/auth.client';
+import { LoginResponseSchema } from '@/api/schemas/auth.schema';
+import { env } from '@/utils/env';
 
 /** @param {import('@playwright/test').APIRequestContext} context */
 const createClients = (context) => ({
@@ -21,7 +22,7 @@ export const apiFixture = base.extend({
       if (!response.ok()) {
         throw new Error(`API login failed: ${response.status()} ${await response.text()}`);
       }
-      const { accessToken } = await response.json();
+      const { accessToken } = LoginResponseSchema.parse(await response.json());
       await context.dispose();
       await use(accessToken);
     },

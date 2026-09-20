@@ -6,7 +6,7 @@ import { e2eFixture } from './e2e.fixtures';
 import { apiFixture } from './api.fixtures';
 // @api-end
 
-/** Single import point for every spec: `import { test, expect } from '<relative>/fixtures/index.fixtures'`. */
+/** Single import point for every spec: `import { test, expect } from '@/fixtures/index.fixtures'`. */
 export const test = mergeTests(
   pageFixture,
   e2eFixture,

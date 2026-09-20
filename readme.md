@@ -51,12 +51,16 @@ pnpm exec playwright-cli attach <session> # then: snapshot, console error, reque
 
 ```
 pages/        Page objects — locators + actions, never assertions
-api/          clients/ (HTTP calls, raw responses) · schemas/ (zod)
+api/          clients/ (HTTP calls, raw responses typed from the schemas) · schemas/ (zod request + response schemas, inferred types)
 utils/        e2e.ts (multi-page flows, bridge guards) · env.ts
 fixtures/     page / e2e / api fixtures → index.fixtures.ts (single import for specs)
 tests/        setup/ · ui/ · api/ · e2e/
 data/         JSON test data (no credentials)
 ```
+
+Imports that leave their folder use the `@/` root alias (`import { test, expect } from '@/fixtures/index.fixtures'`), mapped by `paths` in `tsconfig.json`; `../` is a lint error.
+
+API bodies are never `unknown`: every request and response type is inferred from its zod schema (`z.input` / `z.infer`), clients return `APIResponse<T>`, and specs prove the type with `toMatchSchema`. See [`docs/api-typing.md`](docs/api-typing.md).
 
 ## Using the QA agent
 
@@ -80,7 +84,7 @@ Every participant declares the same name, writers restore the resource in `after
 ## Quality gates
 
 - `pnpm sync:agents:check` — generated Cursor/Copilot files match `.claude/rules` and `.claude/agents`.
-- `pnpm lint` — ESLint (`eslint-plugin-playwright`, typescript-eslint) + `tsc`. Architecture rules are enforced by lint: no assertions in `pages/` or `api/`, specs import only from the fixtures index, no `page.goto()` in specs, no hard-coded credentials, no `waitForTimeout`, no conditionals in tests.
+- `pnpm lint` — ESLint (`eslint-plugin-playwright`, typescript-eslint) + `tsc`. Architecture rules are enforced by lint: no assertions in `pages/` or `api/`, specs import only from the fixtures index, cross-folder imports use the `@/` alias (no `../`), API bodies typed from zod (no `: unknown`, casts or hand-written payload interfaces), no `page.goto()` in specs, no hard-coded credentials, no `waitForTimeout`, no conditionals in tests.
 
 ## Continuous integration
 

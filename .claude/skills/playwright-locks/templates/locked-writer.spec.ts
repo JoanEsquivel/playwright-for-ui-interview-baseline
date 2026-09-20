@@ -1,6 +1,6 @@
-import { test, expect } from '../../fixtures/index.fixtures';
-import { <Resource>Schema, type <Resource> } from '../../api/schemas/<resource>.schema';
-import data from '../../data/<feature>.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import { <Resource>Schema, type <Resource> } from '@/api/schemas/<resource>.schema';
+import data from '@/data/<feature>.json';
 
 /**
  * WRITER of a shared resource that cannot be duplicated: <name the resource and why it is unique>.
@@ -23,8 +23,8 @@ test.describe('<Feature>', { tag: ['@e2e', '@locked'], lock: '<resource-name>' }
     const response = await authedApi.<resource>.get();
     // Fixture-style guard, not an assertion: never store an error body as the snapshot.
     if (!response.ok()) throw new Error(`Cannot snapshot <resource-name>: HTTP ${response.status()}`);
-    const body: unknown = await response.json();
-    snapshot = <Resource>Schema.parse(body);
+    // Parsed, not just typed: the snapshot is written back later, so it must be a proven <Resource>.
+    snapshot = <Resource>Schema.parse(await response.json());
   });
 
   test.afterEach(async ({ authedApi }) => {

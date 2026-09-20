@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+export const ProductListQuerySchema = z.object({
+  limit: z.number().int().nonnegative().optional(),
+  skip: z.number().int().nonnegative().optional(),
+  /** Comma-separated field names, e.g. "id,title,price". */
+  select: z.string().optional(),
+});
+export type ProductListQuery = z.input<typeof ProductListQuerySchema>;
+
+export const ProductSearchQuerySchema = z.object({ q: z.string() });
+export type ProductSearchQuery = z.input<typeof ProductSearchQuerySchema>;
+
 export const ProductSchema = z.object({
   id: z.number().int().positive(),
   title: z.string().min(1),
@@ -24,6 +35,7 @@ export const ProductSummarySchema = z.object({
   price: z.number().nonnegative(),
   category: z.string(),
 });
+export type ProductSummary = z.infer<typeof ProductSummarySchema>;
 
 export const ProductListSchema = z.object({
   products: z.array(ProductSummarySchema),

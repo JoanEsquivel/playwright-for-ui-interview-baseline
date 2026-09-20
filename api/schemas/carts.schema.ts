@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+export const AddCartRequestSchema = z.object({
+  userId: z.number().int().positive(),
+  products: z.array(
+    z.object({
+      id: z.number().int().positive(),
+      quantity: z.number().int().positive(),
+    }),
+  ),
+});
+export type AddCartRequest = z.input<typeof AddCartRequestSchema>;
+
 export const CartProductSchema = z.object({
   id: z.number().int().positive(),
   title: z.string().min(1),
@@ -9,6 +20,7 @@ export const CartProductSchema = z.object({
   discountPercentage: z.number(),
   thumbnail: z.url(),
 });
+export type CartProduct = z.infer<typeof CartProductSchema>;
 
 export const CartSchema = z.object({
   id: z.number().int().positive(),

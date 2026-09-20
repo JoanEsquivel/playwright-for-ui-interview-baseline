@@ -40,8 +40,8 @@ Add a method to `utils/e2e.ts` when the same 3+ page actions repeat across specs
 ## G. Spec
 
 ```ts
-import { test, expect } from '../../fixtures/index.fixtures';
-import data from '../../data/<feature>.json';
+import { test, expect } from '@/fixtures/index.fixtures';
+import data from '@/data/<feature>.json';
 
 test.describe('<Feature>', { tag: ['@ui'] }, () => {
   test.beforeEach(async ({ <pageName> }) => {
@@ -74,5 +74,6 @@ pnpm exec playwright test tests/ui/<feature>.spec.ts --project=ui
 | element not found | locator differs from DOM | re-snapshot, update locator |
 | `waitLoad` timeout | wrong anchor | pick heading/primary action |
 | fixture not found | page not wired | add fixture entry |
-| import error | wrong relative path | `tests/<dir>/` → `../../fixtures/index.fixtures` |
+| `Cannot find module '@/…'` | alias not mapped, or a typo after `@/` | check `"paths": { "@/*": ["./*"] }` in `tsconfig.json`/`jsconfig.json`; the rest of the specifier is the path from the repo root |
+| lint: `Use the '@/' alias…` | a `../` import | rewrite it as `@/<folder>/<file>` |
 | URL mismatch | `url` not relative to `BASE_URL` | fix `url` |

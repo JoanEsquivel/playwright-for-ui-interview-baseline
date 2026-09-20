@@ -32,9 +32,9 @@ Existing artifacts win: if `pages/<name>` or `api/clients/<name>.client` exists,
 ## 2. API path (summary; details in `references/api-flow.md`)
 
 1. **Probe** the real endpoint: `curl -s -i "$API_BASE_URL/<path>"` (add auth header from a login call when needed). Capture status and a payload sample.
-2. **Schema** in `api/schemas/<resource>.schema` derived from the sample (zod, non-strict).
-3. **Client** method in `api/clients/<resource>.client` returning `APIResponse`; wire the client in `fixtures/api.fixtures` (`createClients`, `ApiClients`).
-4. **Spec** in `tests/api/<resource>.spec`: status → `toMatchSchema` → business rules; negative case with data from `data/api.json`.
+2. **Schema first** in `api/schemas/<resource>.schema`, derived from the sample (zod, non-strict): response schemas with `z.infer` types, request/query schemas with `z.input` types. The schema is the only place a shape is written.
+3. **Client** method in `api/clients/<resource>.client` typed only from those schemas (`getById<T = X>(id): Promise<APIResponse<T>>`), no `interface`, `any` or cast; wire the client in `fixtures/api.fixtures` (`createClients`, `ApiClients`).
+4. **Spec** in `tests/api/<resource>.spec`: status → `const x = await response.json()` (already typed, never `: unknown`) → `toMatchSchema` → business rules on `x`; negative case with data from `data/api.json` and the expected contract as type argument (`getById<ErrorResponse>(id)`).
 5. **Verify:** `lint` + `playwright test tests/api/<resource>.spec --project=api`.
 
 ## 3. Report
@@ -46,7 +46,8 @@ List every file created/modified, the run command and its output. If the live pa
 - [ ] Locators/payloads come from a live snapshot or real response captured in this task
 - [ ] Page object: `url`, `.describe()` on every locator, `load()`, `waitLoad()`, action methods only
 - [ ] Fixture entry added (page or client); index untouched unless a new fixture file was created
-- [ ] Spec imports from the fixtures index; tags set; no `page.goto`; no literal credentials
+- [ ] Spec imports from the fixtures index (`@/fixtures/index.fixtures`); every cross-folder import uses `@/`, none uses `../`; tags set; no `page.goto`; no literal credentials
+- [ ] API: every body type is inferred from a zod schema (`z.infer` responses, `z.input` requests); no `unknown`, `any`, `as` or hand-written interface for a payload
 - [ ] Data in `data/*.json`, credentials via `env`
 - [ ] Test owns the data it changes; a resource that cannot be duplicated has the project's `lock` name on every participant and is restored in `afterEach`
 - [ ] `lint` clean and the targeted run green, output shown

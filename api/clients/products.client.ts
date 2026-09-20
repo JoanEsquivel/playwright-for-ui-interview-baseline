@@ -1,24 +1,18 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
-
-export interface ProductListParams {
-  limit?: number;
-  skip?: number;
-  /** Comma-separated field names, e.g. "id,title,price". */
-  select?: string;
-}
+import type { Product, ProductList, ProductListQuery, ProductSearchQuery } from '@/api/schemas/products.schema';
 
 export class ProductsClient {
   constructor(private readonly request: APIRequestContext) {}
 
-  async list(params: ProductListParams = {}): Promise<APIResponse> {
-    return this.request.get('/products', { params: { ...params } });
+  async list<T = ProductList>(query: ProductListQuery = {}): Promise<APIResponse<T>> {
+    return this.request.get<T>('/products', { params: { ...query } });
   }
 
-  async getById(id: number): Promise<APIResponse> {
-    return this.request.get(`/products/${id}`);
+  async getById<T = Product>(id: number): Promise<APIResponse<T>> {
+    return this.request.get<T>(`/products/${id}`);
   }
 
-  async search(query: string): Promise<APIResponse> {
-    return this.request.get('/products/search', { params: { q: query } });
+  async search<T = ProductList>(query: string): Promise<APIResponse<T>> {
+    return this.request.get<T>('/products/search', { params: { q: query } satisfies ProductSearchQuery });
   }
 }
