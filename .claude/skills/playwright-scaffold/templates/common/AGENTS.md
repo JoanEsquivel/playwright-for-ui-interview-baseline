@@ -50,7 +50,7 @@ data/        *.json test data (never credentials)
 5. Verify locators on the live page with `playwright-cli` before writing or changing them.
 6. No `page.goto()` in specs; use `<page>.load()` + `waitLoad()`. (lint)
 7. No credentials in code or data files; use `env.*`. (lint)
-8. Isolated, deterministic tests: no `waitForTimeout`, no `if` in tests, web-first assertions, tags on every test. (lint) Each test owns the data it changes; a resource that cannot be duplicated takes the same `{ lock: '<resource-name>' }` on every test that touches it, restored in `afterEach`. Never `--workers=1`, retries or sleeps to hide a collision.
+8. Isolated, deterministic tests: no `waitForTimeout`, no `if` in tests, web-first assertions, tags on every test. (lint) Each test owns the data it changes; a resource that cannot be duplicated takes the same test lock on every test that touches it (`playwright-locks`). Never go serial, retry or sleep to hide a collision.
 9. Every page object gets a fixture entry; every client is wired in the api fixture. Orphans are removed on delete.
 10. Done = `lint` clean and the targeted `playwright test` run green. Never weaken an assertion; file a bug report instead.
 
@@ -66,9 +66,7 @@ data/        *.json test data (never credentials)
 | Auth once per run | setup | `tests/setup` |
 | Tests change a resource that cannot be duplicated | any style + test lock on every participant (`playwright-locks`) | where the tests live |
 
-Test locks are runner-local (one `playwright test` run): they do not cross shards or CI jobs, are not an order and are not cleanup. Isolation first.
-
-Tags: `@smoke` on every PR, `@regression` on full runs, `@ui`/`@api`/`@e2e` on the describe.
+Tags: `@smoke` on every PR, `@regression` on full runs, `@ui`/`@api`/`@e2e` on the describe, `@locked` on anything that declares a `lock`.
 
 ## Skills and agent
 

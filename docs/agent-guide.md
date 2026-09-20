@@ -78,7 +78,7 @@ tests/ui/login.spec.ts fails on "should show an error for a locked out user". He
 
 Flaky variant: `It passes on retry about half the time; use --repeat-each and the trace to find the race.`
 Collision variant: `It only fails in the full run with several workers and the received value looks like another test's data. Reproduce with --workers=4 --repeat-each=3 --retries=0 together with the specs that write what it reads.`
-Expect: root cause in one sentence, failure class (locator / timing / data / auth / environment / app-bug / contention / flaky), the diff, and a `--repeat-each=3` green run. If the app is wrong it writes a bug report under `bug-reports/` instead of patching the test.
+Expect: root cause in one sentence, failure class (locator / timing / data / auth / environment / app-bug / contention / flaky), the diff, and a `--repeat-each=3` green run (for `contention`: a green `--workers=4 --repeat-each=2 --retries=0` stress run instead). If the app is wrong it writes a bug report under `bug-reports/` instead of patching the test.
 
 ### Delete tests safely
 
@@ -105,7 +105,7 @@ tests/e2e/account-settings.spec.ts and tests/e2e/billing.spec.ts both change the
 ```
 
 Variants: `Is a lock the right tool here, or should I isolate the data?` · `We shard the nightly run in 4: what happens to the locked tests?` · `Show me the race first: reproduce it without the lock and print the timeline.` · `Review every lock in tests/ and tell me which ones could be removed by isolating data.`
-Expect: the decision (isolate / lock / redesign) with the reason, the lock name and every participant file, the `beforeEach`/`afterEach` restore in writers, the red run without the lock and the green `--workers=4 --repeat-each=2 --retries=0` run with it, and the CI implication (locks do not cross shards or jobs). Requires `@playwright/test` 1.63 or newer.
+Expect: the decision (isolate / lock / redesign) with the reason, the lock name, the `@locked` tag and every participant file, the `beforeEach`/`afterEach` restore in writers, the red run without the lock and the green `--workers=4 --repeat-each=2 --retries=0` run with it, and the CI implication (locks do not cross shards or jobs). Requires `@playwright/test` 1.63 or newer.
 
 ### Conventions and reviews
 
@@ -147,7 +147,7 @@ Every task ends with: files created or modified (paths), the commands it ran wit
 | `Missing required environment variable "X"` | Fill it in `.env` (copy from `.env.example`) |
 | Tests redirect to the login page | Storage state is stale: `pnpm test:setup` |
 | A test fails only in the full run, passes alone and on retry, and shows another test's data | Contention on a shared resource: ask for the `playwright-locks` skill; reproduce with `--workers=4 --repeat-each=3 --retries=0` |
-| Locked tests still collide in the sharded or matrix run | Test locks live inside one `playwright test` process; give each shard its own resource or run the locked tests in one non-sharded job |
+| Locked tests still collide in the sharded or matrix run | Test locks live inside one `playwright test` process; give each shard its own resource, or (kit guidance, not measured in the demo) run the `@locked` tests in one non-sharded job. Options in order: `playwright-locks` → `references/ci.md` |
 | `lock` is rejected by TypeScript | `@playwright/test` is older than 1.63; upgrade |
 | `playwright-cli: command not found` | Use `pnpm exec playwright-cli …` (or `npx playwright-cli …`) |
 | A skill does not show in the `/` menu | Folder name must equal the `name` in `SKILL.md`; in Claude Code run `/reload-plugins` |

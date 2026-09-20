@@ -53,20 +53,17 @@ Never: CSS classes, generated ids, XPath, nth-child chains.
 | `@smoke` | critical path, fast, stable | every PR (`--grep @smoke`) |
 | `@regression` | everything else | push to main, nightly |
 | `@ui` / `@api` / `@e2e` | style marker on the `describe` | project filters |
+| `@locked` | the test or group declares a `lock`; added next to the other tags | everywhere; lets CI select locked tests (`--grep @locked` / `--grep-invert @locked`) |
 
 ## Shared resources and locks
 
-Isolation first. Full guide: the `playwright-locks` skill (`lock` test option, Playwright 1.63+).
+Isolation first. Short version; the full table, semantics and CI limits are in the `playwright-locks` skill (`lock` test option, Playwright 1.63+).
 
 | Situation | Choice |
 |---|---|
-| Tests only read a shared thing | nothing; reads do not conflict |
-| Each test can own a copy (user, record, file, `.auth/<role>.json`) | unique per test/role; no lock |
-| One thing that cannot be duplicated (seeded account, global setting, one-slot sandbox, rate-limited API) | `{ lock: '<resource-name>' }` on **every** test or `describe` that touches it; writers restore it in `afterEach` |
-| Several such things in one test | `lock: ['a', 'b']` |
-| Shared across shards, CI jobs or concurrent runs | locks are runner-local: partition the resource (per test → per worker/shard → idempotent) |
-| Test B needs what test A produced | setup project or fixture; a lock is not an order |
-| Every test mutates the same global state | serial (`--workers=1`) |
+| Each test can own a copy (user, record, file, `.auth/<role>.json`), or tests only read | no lock |
+| One thing that cannot be duplicated (seeded account, global setting, one-slot sandbox) | `{ tag: [… , '@locked'], lock: '<resource-name>' }` on **every** test or `describe` that touches it; writers restore it in `afterEach` |
+| Shared across shards or CI jobs, order between tests, or the whole suite sharing state | not a lock → `playwright-locks` (`references/decision-guide.md`, `references/ci.md`) |
 
 ## Parallelism
 

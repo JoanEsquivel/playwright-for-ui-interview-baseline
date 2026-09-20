@@ -46,7 +46,7 @@ data/        *.json test data (never credentials)
 5. **Verify locators against the live page** with `playwright-cli` (snapshot/eval) before writing or changing them. Never guess from memory.
 6. **No `page.goto()` in specs**; call `<page>.load()` then `<page>.waitLoad()`. Enforced by lint.
 7. **No credentials in code or data files.** Use `env.*`. Enforced by lint (literal args to `login`/`submitLoginForm`).
-8. **Tests are isolated and deterministic.** No `waitForTimeout`, no `if` in tests, no order dependence, web-first assertions only. Enforced: `eslint-plugin-playwright`. Each test owns the data it changes; a resource that cannot be duplicated takes the same `{ lock: '<resource-name>' }` on **every** test that touches it, and its writers restore it in `afterEach`. Never `--workers=1`, retries or sleeps to hide a collision.
+8. **Tests are isolated and deterministic.** No `waitForTimeout`, no `if` in tests, no order dependence, web-first assertions only. Enforced: `eslint-plugin-playwright`. Each test owns the data it changes; a resource that cannot be duplicated takes the same test lock on **every** test that touches it (`playwright-locks`). Never go serial, retry or sleep to hide a collision.
 9. **Every new page object gets a fixture entry** in `fixtures/page.fixtures.ts`; every API client is wired in `fixtures/api.fixtures.ts`. Orphans are removed on delete.
 10. **Definition of done:** `pnpm lint` clean and the targeted `playwright test` run green, with output shown. Never weaken an assertion to make a test pass; if the app is wrong, file a bug report instead.
 
@@ -59,11 +59,9 @@ data/        *.json test data (never credentials)
 | Multi-page journey | E2E | `tests/e2e` | page fixtures + storage state |
 | Auth once per run | setup | `tests/setup` | `e2e.login()` → `storageState` |
 | Data needed before a UI test | seed via API in `beforeEach`, verify in UI | `tests/e2e` | `api` + page fixtures |
-| Tests change a resource that cannot be duplicated (seeded account, global setting, one-slot sandbox) | any style + test lock (Playwright 1.63+) on every participant | where the tests already live | `{ lock: '<resource-name>' }` in the `describe`/`test` details |
+| Tests change a resource that cannot be duplicated (seeded account, global setting, one-slot sandbox) | any style + test lock (Playwright 1.63+) on every participant | where the tests already live | `{ tag: [… , '@locked'], lock: '<resource-name>' }`; see `docs/test-locks.md` |
 
-Test locks are a mutex inside one `playwright test` run: same-name tests take turns across files, workers and projects while the rest stays parallel. They do not cross shards or CI jobs, are not an order, and are not cleanup. Isolation comes first (own data per test, one `.auth/<role>.json` per role). Full guide: `docs/test-locks.md` and the `playwright-locks` skill.
-
-Tags: `@smoke` (runs on every PR), `@regression` (full runs), plus `@ui` / `@api` / `@e2e` on the describe.
+Tags: `@smoke` (runs on every PR), `@regression` (full runs), plus `@ui` / `@api` / `@e2e` on the describe, and `@locked` on anything that declares a `lock`.
 
 ## Skills and agent
 

@@ -30,7 +30,7 @@ Repeatable (a teaching repo, or a race you want to keep demonstrable): copy `../
 "demo:locks": "playwright test --workers=4 --repeat-each=2 --retries=0"
 ```
 
-Lock-free copies of locked specs (so both versions can run side by side) live in a folder no project of the main config points at, e.g. `tests/demo/race/`. They differ from the originals only by the missing `lock` option and a header comment, so `diff` shows the fix. That folder is a documented exception to the four-folder layout: record it in `AGENTS.md` and `docs/decisions.md`. For a one-off investigation, skip the copies: remove the `lock` locally, reproduce, put it back.
+Lock-free copies of locked specs (so both versions can run side by side) live in a folder no project of the main config points at, e.g. `tests/demo/race/`. They differ from the originals only by the missing `lock` option and a header comment, so `diff` shows the fix. That folder is a documented exception to the four-folder layout: record it in `AGENTS.md` (and in the project's decision log, if it has one). For a one-off investigation, skip the copies: remove the `lock` locally, reproduce, put it back.
 
 ## B. See the overlap: the timeline fixture
 
@@ -61,7 +61,7 @@ With the lock:
   8 passed (12.3s)
 ```
 
-What it shows: lock-free tests ran in parallel with the writer; the first reader started 6 ms after the writer ended; holders of the same name ran one at a time. Cost: nothing measurable (in CI the locked stress run took 30.0 s, the broken run 33.0 s).
+What it shows: lock-free tests ran in parallel with the writer; the first reader started 6 ms after the writer ended; holders of the same name ran one at a time. Cost: the holders run back to back, so they take roughly the sum of their durations (here ~6 s writer + ~3 s readers) while the rest of the suite is unaffected. Which holder goes first varies between runs: read the timeline, never assert on it.
 
 ## C. Verify the fix
 

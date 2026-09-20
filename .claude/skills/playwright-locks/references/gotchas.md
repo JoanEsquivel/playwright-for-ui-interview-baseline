@@ -1,6 +1,6 @@
 # Things that bite people
 
-Each item was hit or measured in the reference demo (<https://github.com/JoanEsquivel/playwright-lock-demo>); two of them were bugs in the demo's own first version, found in review.
+From the reference demo (<https://github.com/JoanEsquivel/playwright-lock-demo>). Items marked *Real case* or with numbers were hit or measured there; items 1 and 2 were bugs in the demo's own first version, fixed in its commit `12feb51`. The rest follow from how the scheduler works (`semantics.md`).
 
 ## 1. Everyone must opt in
 
@@ -14,7 +14,9 @@ No lint rule can enforce this. Find participants by grepping the **resource hand
 
 Exclusive access only. If a writer crashes half-way, the resource stays modified and every later holder fails *with* the lock in place.
 
-*Real case:* the demo's writer first restored the file only at the end of the test body. Fix: snapshot in `beforeEach`, restore in `afterEach`, which runs even when the test fails and still inside the lock (`../templates/locked-writer.spec.ts`).
+*Real case:* the demo's writer first restored the file only at the end of the test body. Fix: snapshot in `beforeEach`; restore at the end of the test body (so the final assertions check the restored state) **and** in `afterEach`, which runs even when the test fails and still inside the lock (`../templates/locked-writer.spec.ts`).
+
+Limits: `afterEach` does not run when the worker process dies. In the demo the damage is bounded to one run because the `setup` project recreates the file next time; a backend resource has no such safety net, so reset it at the start of the run as well.
 
 ## 3. File mode changes the granularity
 
@@ -30,7 +32,7 @@ One `playwright test` process. Shards, matrix jobs and concurrent workflow runs 
 
 ## 6. Retries hide races
 
-With `retries: 2` a collision usually passes on the retry and is never reported. Investigate contention with `--retries=0`; validate a lock with `--retries=0`.
+With `retries: 2` a collision usually passes on the retry and is never reported; with `retryStrategy: 'isolated'` the retry runs while no other worker is busy, so it *always* passes. Investigate contention with `--retries=0`; validate a lock with `--retries=0`.
 
 ## 7. One race, several symptoms
 
@@ -50,7 +52,7 @@ A writer asserts on its own browser and passes. The damage shows up in whoever r
 
 ## 9. Few workers and fast machines hide it
 
-`ubuntu-latest` has 4 cores and Playwright defaults to half (2 workers): fewer overlaps, so the race goes unnoticed for months. Force `--workers=4` (or more) when reproducing. Slower machines *widen* the window: the demo collided 1 of 9 readers on a laptop and 5 of 9 on the CI runner.
+`ubuntu-latest` has 4 cores on public repositories and Playwright defaults to half (2 workers): fewer overlaps, so the race goes unnoticed for months. Private-repository standard runners have 2 cores → 1 worker, where it is hidden completely. Force `--workers=4` (or more) when reproducing. Slower machines *widen* the window: with 4 workers the demo failed 3 runs out of 3 on a laptop (1 of 9 readers in the captured run), and 5 of 9 readers collided on the CI runner.
 
 ## 10. It may not reproduce on a given run
 
@@ -60,6 +62,10 @@ Timing-dependent. Raise `--repeat-each`, raise workers, re-run. "Passed once wit
 
 Readers holding the same name serialise against each other too. If many read-only tests pile up behind one lock, make them independent of the resource instead.
 
-## 12. `parallelIndex`, not `workerIndex`, in timelines
+## 12. Timing and order vary between runs
+
+Which holder goes first, and how long a test waits, change from run to run (first-fit scheduling, no fairness). Assert outcomes, never scheduling order or durations. A timeline is for a human to read, not for an `expect`.
+
+## 13. `parallelIndex`, not `workerIndex`, in timelines
 
 `workerIndex` grows each time a worker restarts (after every failure), which makes overlaps unreadable.

@@ -33,7 +33,7 @@ Only **a few tests** share something that cannot be duplicated (a seeded account
 - Shard count: start at 4; raise until per-shard time is ~3–5 min; keep `fail-fast: false`.
 - Browsers: add a matrix `browser: [chromium, firefox, webkit]` that sets `BROWSERS=${{ matrix.browser }}` and the action input `browsers: ${{ matrix.browser }}`.
 - Serial: `--workers=1`; consider `--project=<one>` per job to regain some parallelism across projects.
-- Locked tests + shards: give each shard its own resource (`E2E_USERNAME_${{ matrix.shardIndex }}`), or run the `@locked` tests in one non-sharded job and shard the rest with `--grep-invert @locked`. Stress/validation jobs for locks run with `--workers=4 --retries=0`; two-job proof workflow: `playwright-locks/templates/playwright-locks.yml`.
+- Locked tests (`@locked`) + shards or concurrent runs: locks do not reach across processes; follow the ordered options in `playwright-locks/references/ci.md` (per-shard resource with valid `secrets[format(…)]` syntax, non-sharded `@locked` job, `concurrency:` group; the last two are kit guidance, not measured). Jobs that validate locks run with `--workers=4 --retries=0`.
 
 ## 4. Verify
 

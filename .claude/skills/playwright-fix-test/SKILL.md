@@ -55,7 +55,7 @@ Every CLI action prints the equivalent Playwright code: use it as the fix templa
 | environment | `.env` values, missing browser, network; document in `readme` if others will hit it |
 | app-bug | bug report; no test change (or `test.fixme` with the bug id, on request) |
 | contention | two tests use the same account/record/file at once: isolate the data per test or role; if the resource cannot be duplicated, `{ lock: '<resource-name>' }` on **every** participant and a restore in the writer's `afterEach` (`playwright-locks` skill). Never `--workers=1`, retries or sleeps |
-| flaky | find the race (network, animation, test isolation, shared data); fix root cause; retries are not a fix |
+| flaky | find the race inside the test itself (network, animation, late render); fix root cause; retries are not a fix. Another test involved → `contention` |
 
 ## 6. Verify
 

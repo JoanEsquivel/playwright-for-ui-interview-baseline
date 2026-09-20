@@ -38,7 +38,7 @@ Three or more independent pages or endpoints to cover: spawn one `Agent` per tar
 2. **Existing code first.** Check `pages/`, `api/clients/`, `fixtures/` and `utils/e2e` before creating anything; extend instead of duplicating.
 3. **Definition of done.** `lint` clean and the targeted `playwright test` run green, output shown in the report. Then run the affected project once more.
 4. **Never weaken a test to pass it.** Application misbehavior becomes a bug report (`playwright-fix-test`).
-5. **Isolation before locks.** A test owns the data it changes. Reach for `{ lock }` only when the resource cannot be duplicated, put it on every participant, and prove it with `--workers=4 --repeat-each=2 --retries=0`. Never go serial, add retries or sleep to hide a collision.
+5. **Isolation before locks.** A test owns the data it changes. Reach for `{ lock }` only when the resource cannot be duplicated, put it on every participant, and prove it with `--workers=4 --repeat-each=2 --retries=0`. Never go serial, add retries or sleep to hide a collision; serial is a strategy only when the whole suite shares state (`playwright-ci`).
 6. **Config and CI changes** (`playwright.config`, `eslint.config`, `.github/`) are explained before editing and kept minimal.
 
 ## Response protocol

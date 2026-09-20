@@ -1,5 +1,7 @@
 # Decision guide: lock, isolate or serialise
 
+This file holds the canonical decision table; other kit files carry a short version and point here.
+
 ## The three questions, in order
 
 1. **Can I remove the sharing?** Own user, own record, own file per test. Key data on `testInfo.testId`; seed through the API in `beforeEach`, delete in `afterEach`.
@@ -25,18 +27,19 @@
 
 | Workaround | Problem | Lock |
 |---|---|---|
-| `--workers=1` / `fullyParallel: false` | whole suite pays; correct and several times slower | only the participants take turns |
+| `--workers=1` | whole suite pays; correct and several times slower | only the participants take turns |
+| `fullyParallel: false` | serialises tests *inside* each file only; tests in different files still collide | works across files |
 | `test.describe.configure({ mode: 'serial' })` | only helps when the colliding tests live in the same file; couples them (one failure skips the rest) | works across files, workers and projects; tests stay independent |
 | sleeps, retries | the failure gets rarer, not fixed; retries hide it | removes the overlap |
 | one project with `workers: 1` | serialises the project, not the resource; other projects still collide | follows the resource wherever it is used |
 
-Target picture: ~95 % of the suite parallel and lock-free, a few tests declaring the resources they cannot avoid sharing.
+Target picture (illustrative, not a measurement): nearly all of the suite parallel and lock-free, a few tests declaring the resources they cannot avoid sharing.
 
 ## Resources that typically need a lock
 
-Seeded or shared user account · admin account · shared tenant · mutable database record with a fixed id · feature flags and global app settings · environment configuration · third-party sandbox with one slot (payments, SMS, e-mail inbox) · rate-limited API · physical device · a file on the runner that a test rewrites.
+Seeded or shared user account · admin account · shared tenant · mutable database record with a fixed id · feature flags and global app settings · environment configuration · third-party sandbox with one slot (payments, SMS, e-mail inbox) · an API that allows one request at a time · physical device · a file on the runner that a test rewrites.
 
-Not on this list: authentication state per role, test data a test can create for itself, anything read-only.
+Not on this list: authentication state per role, test data a test can create for itself, anything read-only, and targets limited by *rate* (requests per minute): a lock caps concurrency at 1 but does not space requests out, so those go to the serial strategy in `playwright-ci`.
 
 ## Review checklist (before approving a lock)
 
@@ -52,5 +55,6 @@ Not on this list: authentication state per role, test data a test can create for
 
 - kebab-case noun of the resource: `seeded-account`, `payment-sandbox`, `feature-flags`.
 - One name per resource, not per feature or file. Two names for the same resource protect nothing.
-- Do not build names dynamically unless the resource really is per-key (`lock: \`tenant-${tenantId}\`` is fine when tenants are independent).
+- The name is fixed when the file loads. A computed name works only with values known at that moment (`lock: \`tenant-${env.TENANT}\``, a row of `data/*.json` in a loop); it cannot use `testInfo.parallelIndex`, `testInfo.testId` or a fixture. A non-string value throws at load.
+- Tag every locked test or group `@locked` so CI can select them with `--grep` / `--grep-invert`.
 - List the project's lock names and what they protect in `AGENTS.md` or the agent memory so the next test reuses them.

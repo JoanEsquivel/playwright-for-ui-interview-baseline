@@ -72,7 +72,7 @@ Ask for any of: create a framework from zero in another directory, add UI/API te
 Tests here own the data they change, so the suite needs no lock. When a target has something tests cannot duplicate (one seeded account, a global setting, a one-slot sandbox), Playwright 1.63+ test locks serialise only the tests that touch it:
 
 ```ts
-test.describe('Account settings', { tag: ['@e2e'], lock: 'seeded-account' }, () => { /* … */ });
+test.describe('Account settings', { tag: ['@e2e', '@locked'], lock: 'seeded-account' }, () => { /* … */ });
 ```
 
 Every participant declares the same name, writers restore the resource in `afterEach`, and the fix is proven with `pnpm exec playwright test --workers=4 --repeat-each=2 --retries=0`. Locks live inside one `playwright test` run: they do not cross shards or CI jobs. Full write-up with the measured race, pitfalls and CI guidance: [`docs/test-locks.md`](docs/test-locks.md); agent procedure: `.claude/skills/playwright-locks/`; runnable tutorial: [playwright-lock-demo](https://github.com/JoanEsquivel/playwright-lock-demo).

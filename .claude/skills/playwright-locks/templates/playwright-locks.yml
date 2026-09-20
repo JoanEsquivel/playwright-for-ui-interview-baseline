@@ -1,3 +1,8 @@
+# Two-job proof for tutorials and demonstrable races (playwright-locks skill, references/ci.md).
+# Test locks live inside ONE `playwright test` process. If the shared resource is a backend thing
+# (seeded account, sandbox) and not a file local to the runner, these jobs and any other workflow
+# hitting the same environment share it: keep `needs:` below and add the same `concurrency:` group
+# to every workflow that touches the environment.
 name: Playwright (test locks)
 on:
   push:
@@ -7,8 +12,12 @@ on:
 env:
   CI: true
   BASE_URL: ${{ vars.BASE_URL || '{{BASE_URL}}' }}
+  API_BASE_URL: ${{ vars.API_BASE_URL || '{{API_BASE_URL}}' }}
   E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
   E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+  API_USERNAME: ${{ secrets.API_USERNAME }}
+  API_PASSWORD: ${{ secrets.API_PASSWORD }}
+  # No API layer in the project: delete the three API_* lines.
   # Add one pair of secrets per extra role the locked specs sign in with, for example:
   # E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
   # E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
@@ -55,6 +64,9 @@ jobs:
 
   with-locks:
     name: With locks (must be green)
+    # After the lock-free job, never next to it: two runners share a backend resource,
+    # and a collision between jobs is something no test lock can prevent.
+    needs: without-locks
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
