@@ -1,0 +1,7 @@
+{
+  "invalidCredentials": { "username": "not-a-user", "password": "not-a-password" },
+  "knownProduct": { "id": 1, "title": "Essence Mascara Lash Princess", "category": "beauty" },
+  "missingProductId": 0,
+  "searchQuery": "phone",
+  "cart": { "userId": 1, "products": [{ "id": 1, "quantity": 2 }, { "id": 2, "quantity": 1 }] }
+}

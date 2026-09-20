@@ -1,0 +1,8 @@
+{
+  "lockedOutUser": { "username": "locked_out_user" },
+  "emptyCredentials": { "username": "", "password": "" },
+  "errors": {
+    "lockedOut": "Epic sadface: Sorry, this user has been locked out.",
+    "usernameRequired": "Epic sadface: Username is required"
+  }
+}

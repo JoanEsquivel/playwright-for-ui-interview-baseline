@@ -1,108 +1,97 @@
-# Playwright UI Automation Framework
+# Playwright Standards — Reference Implementation
 
-A end-to-end testing framework built with Playwright covering the critical purchase flow on SauceDemo (Swag Labs).
+This repository is the **reference implementation** of a Playwright standards kit and, at the same time, the kit itself (agent, skills and rules under `.claude/`). The UI target (SauceDemo) and the API target (DummyJSON) are **examples only**: every URL and credential comes from `.env`, so the same structure applies to any application.
+
+- Architecture rules: `AGENTS.md` (portable, read by Claude Code, GitHub Copilot and Cursor)
+- Agent skills: `.claude/skills/` · QA agent: `.claude/agents/qa-playwright-engineer.md` (Copilot mirror in `.github/agents/`)
+- Path-scoped rules: `.claude/rules/` → mirrored to `.cursor/rules/` and `.github/instructions/` by `pnpm sync:agents`
+- Design, plans and decisions: `docs/`
 
 ---
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) v18 or higher
-- [pnpm](https://pnpm.io/) v10.17.0 (declared in `package.json` as `packageManager`)
-- A `.env` file at the root with the following variables:
+- Node.js ≥ 20.11 (Node 24 recommended)
+- pnpm 10 via Corepack: `corepack enable` (or prefix commands with `corepack pnpm`)
+- A `.env` file created from `.env.example`
 
+```bash
+cp .env.example .env   # then edit the values for your targets
 ```
-email=${validEmail}
-password={validPassword}
-```
-
-> Credentials are loaded via `dotenv` in `playwright.config.js` and accessed through `process.env` — never hardcoded in tests.
-
----
 
 ## Installation
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Install Playwright browsers
-pnpm exec playwright install --with-deps
+pnpm exec playwright install chromium --with-deps
 ```
 
----
+## Running tests
 
-## Running Tests
+| Command | What it runs |
+|---|---|
+| `pnpm test` | Every project: `setup` → `ui`, `e2e`, plus `api` |
+| `pnpm test:ui` | Single-page UI specs (`tests/ui`) |
+| `pnpm test:api` | API specs (`tests/api`), no browser |
+| `pnpm test:e2e` | Multi-page flows (`tests/e2e`), authenticated via storage state |
+| `pnpm test:smoke` | Only tests tagged `@smoke` |
+| `pnpm test:headed` | Watch the browser |
+| `BROWSERS=chromium,firefox,webkit pnpm test` | Adds `ui-firefox`, `e2e-webkit`, … projects |
+| `WORKERS=1 pnpm test` | Serial run |
+| `pnpm report` | Open the last HTML report |
 
-### Headless (default)
-Runs all tests across all configured browsers without opening a UI.
+### Debugging with Playwright CLI
+
 ```bash
-pnpm exec playwright test
+pnpm test:debug tests/ui/login.spec.ts   # pauses and prints a session name
+pnpm exec playwright-cli attach <session> # then: snapshot, console error, requests, pause-at, step-over, resume
 ```
 
-### Headed (watch the browser)
-Opens a real browser window so you can see what's happening step by step.
+## Project layout
+
+```
+pages/        Page objects — locators + actions, never assertions
+api/          clients/ (HTTP calls, raw responses) · schemas/ (zod)
+utils/        e2e.ts (multi-page flows, bridge guards) · env.ts
+fixtures/     page / e2e / api fixtures → index.fixtures.ts (single import for specs)
+tests/        setup/ · ui/ · api/ · e2e/
+data/         JSON test data (no credentials)
+```
+
+## Using the QA agent
+
 ```bash
-pnpm exec playwright test --headed
+claude --agent qa-playwright-engineer            # Claude Code
+# Copilot: /qa-playwright-engineer in VS Code or `copilot --agent qa-playwright-engineer`; Cursor: AGENTS.md + skills load automatically
 ```
 
-### UI Mode (interactive)
-My go-to for debugging. Opens Playwright's built-in test runner UI where you can pick tests, inspect steps, view traces, and watch the browser side by side.
-```bash
-pnpm exec playwright test --ui
+Ask for any of: create a framework from zero in another directory, add UI/API tests for a URL or endpoint, fix a failing test, delete tests, set up serial/parallel/sharded CI, protect a shared resource with test locks. Invocation per tool and recommended prompts: `docs/agent-guide.md`.
+
+## Shared resources and test locks
+
+Tests here own the data they change, so the suite needs no lock. When a target has something tests cannot duplicate (one seeded account, a global setting, a one-slot sandbox), Playwright 1.63+ test locks serialise only the tests that touch it:
+
+```ts
+test.describe('Account settings', { tag: ['@e2e', '@locked'], lock: 'seeded-account' }, () => { /* … */ });
 ```
 
-### Specific file or folder
-```bash
-# Run only E2E tests
-pnpm exec playwright test tests/e2e
+Every participant declares the same name, writers restore the resource in `afterEach`, and the fix is proven with `pnpm exec playwright test --workers=4 --repeat-each=2 --retries=0`. Locks live inside one `playwright test` run: they do not cross shards or CI jobs. Full write-up with the measured race, pitfalls and CI guidance: [`docs/test-locks.md`](docs/test-locks.md); agent procedure: `.claude/skills/playwright-locks/`; runnable tutorial: [playwright-lock-demo](https://github.com/JoanEsquivel/playwright-lock-demo).
 
-# Run a specific spec
-pnpm exec playwright test tests/e2e/saucedemo-critical-path.spec.js
+## Quality gates
 
-# Run on a specific browser
-pnpm exec playwright test --project=chromium
-```
+- `pnpm sync:agents:check` — generated Cursor/Copilot files match `.claude/rules` and `.claude/agents`.
+- `pnpm lint` — ESLint (`eslint-plugin-playwright`, typescript-eslint) + `tsc`. Architecture rules are enforced by lint: no assertions in `pages/` or `api/`, specs import only from the fixtures index, no `page.goto()` in specs, no hard-coded credentials, no `waitForTimeout`, no conditionals in tests.
 
-### View the HTML report
-After a test run, open the report to inspect results, traces, and screenshots.
-```bash
-pnpm exec playwright show-report
-```
+## Continuous integration
 
----
+| Workflow | Trigger | Strategy |
+|---|---|---|
+| `lint.yml` | push / PR | ESLint + typecheck |
+| `playwright-parallel.yml` | push / PR / manual | Default workers; `@smoke` on PRs, full suite on push |
+| `playwright-serial.yml` | manual | `--workers=1` for rate-limited targets or suites where everything shares state (a few colliding tests: use test locks instead) |
+| `playwright-sharded.yml` | nightly / manual | 4 shards + blob reports merged into one HTML report |
 
-## Architecture
-
-I went with a classic Page Object Model structure, but with a few conventions I picked up that keep things clean and scalable.
-
-```
-playwright-for-ui/
-├── pages/              # One class per page — locators and actions only
-├── utils/
-│   └── e2e.js          # Orchestrates multi-page flows (login, full purchase, etc.)
-├── fixtures/
-│   ├── page.fixtures.js    # Wires each page object into Playwright's fixture system
-│   ├── e2e.fixtures.js     # Wires the E2E utility class
-│   └── index.fixtures.js   # Single export point — all specs import from here
-├── tests/
-│   ├── *.spec.js           # Single-page tests (login, forms, etc.)
-│   └── e2e/*.spec.js       # Multi-page end-to-end flows
-├── data/
-│   └── checkout-data.json  # Test data — no credentials, no hardcoded values in tests
-└── .env                    # Local credentials — gitignored
-```
-
-### The core idea
-
-**Page objects only interact, tests only assert.** That's the rule I follow strictly. Page objects expose locators and action methods, but they never run `expect()`. All assertions live in the spec file. This makes it really easy to see at a glance what a test is verifying without digging into multiple files.
-
-**Fixtures wire everything together.** Instead of instantiating page objects inside tests, each class is registered as a Playwright fixture. Tests just declare what they need as parameters and Playwright handles the rest. All specs import from `fixtures/index.fixtures.js` — a single source of truth — so swapping something out later only requires changing one file.
-
-**E2E utility for multi-page flows.** When a test spans multiple pages (like the full purchase flow), I use `utils/e2e.js` to orchestrate those steps. `e2e.login()` for example handles the full login sequence and acts as a bridge guard — confirming you actually landed on the inventory page before the test continues. This keeps `beforeEach` blocks clean.
-
-**Locators use semantic selectors.** I prioritize `getByRole()` and `data-test` attributes over CSS classes or XPaths. They're less brittle when the UI changes and they communicate intent — `page.getByRole('button', { name: 'Checkout' })` tells you exactly what it's clicking without needing a comment.
-
-**Test data lives in `/data`**, not in the test itself. Anything that could change (names, postal codes) goes in a JSON file. Credentials stay in `.env`.
+Required repository secrets: `E2E_USERNAME`, `E2E_PASSWORD`, `API_USERNAME`, `API_PASSWORD`. Optional variables: `BASE_URL`, `API_BASE_URL` (default to the example targets).
 
 ---
 
