@@ -1,0 +1,75 @@
+name: Playwright (test locks)
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+env:
+  CI: true
+  BASE_URL: ${{ vars.BASE_URL || '{{BASE_URL}}' }}
+  E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
+  E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+  # Add one pair of secrets per extra role the locked specs sign in with, for example:
+  # E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+  # E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+jobs:
+  # Tutorials and demonstrable races only. Delete this job in a product pipeline:
+  # an expected-to-fail job has no place there; keep `with-locks` as the stress run.
+  without-locks:
+    name: Without locks (expected to fail)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-playwright
+      # playwright.race.config.ts runs the lock-free copies: 4 workers, no retries, repeat-each 3.
+      # The failure IS the lesson, so the step may fail and the job stays green.
+      - name: Run the participants WITHOUT locks
+        id: race
+        continue-on-error: true
+        run: {{PM_EXEC}} playwright test -c playwright.race.config.ts
+      - name: Write the outcome to the job summary
+        if: ${{ !cancelled() }}
+        env:
+          RACE_OUTCOME: ${{ steps.race.outcome }}
+        run: |
+          {
+            echo "## Without locks"
+            if [ "$RACE_OUTCOME" = "failure" ]; then
+              echo "Race reproduced: a reader used the shared resource while a writer held it."
+            else
+              echo "No collision this time (the race is timing-dependent). Re-run the workflow or raise repeatEach."
+            fi
+            echo
+            echo "Open the \`playwright-report-without-locks\` artifact for the failing test, screenshot and trace."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Merge blob report to HTML
+        if: ${{ !cancelled() }}
+        run: {{PM_EXEC}} playwright merge-reports --reporter html ./blob-report
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-without-locks
+          path: playwright-report/
+          retention-days: 14
+
+  with-locks:
+    name: With locks (must be green)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-playwright
+      # Stressed on purpose: 4 workers (the runner default is 2), every test twice,
+      # and no retries so a missing lock cannot hide behind a retry.
+      - name: Run the whole suite WITH locks
+        run: {{PM_EXEC}} playwright test --workers=4 --repeat-each=2 --retries=0
+      - name: Merge blob report to HTML
+        if: ${{ !cancelled() }}
+        run: {{PM_EXEC}} playwright merge-reports --reporter html ./blob-report
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-with-locks
+          path: playwright-report/
+          retention-days: 14
