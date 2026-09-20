@@ -54,10 +54,25 @@ Never: CSS classes, generated ids, XPath, nth-child chains.
 | `@regression` | everything else | push to main, nightly |
 | `@ui` / `@api` / `@e2e` | style marker on the `describe` | project filters |
 
+## Shared resources and locks
+
+Isolation first. Full guide: the `playwright-locks` skill (`lock` test option, Playwright 1.63+).
+
+| Situation | Choice |
+|---|---|
+| Tests only read a shared thing | nothing; reads do not conflict |
+| Each test can own a copy (user, record, file, `.auth/<role>.json`) | unique per test/role; no lock |
+| One thing that cannot be duplicated (seeded account, global setting, one-slot sandbox, rate-limited API) | `{ lock: '<resource-name>' }` on **every** test or `describe` that touches it; writers restore it in `afterEach` |
+| Several such things in one test | `lock: ['a', 'b']` |
+| Shared across shards, CI jobs or concurrent runs | locks are runner-local: partition the resource (per test → per worker/shard → idempotent) |
+| Test B needs what test A produced | setup project or fixture; a lock is not an order |
+| Every test mutates the same global state | serial (`--workers=1`) |
+
 ## Parallelism
 
 | Suite duration | Strategy |
 |---|---|
 | < 5 min | parallel (default workers) |
-| 5–10 min or shared-state target | serial (`--workers=1`) or per-project jobs |
-| > 10 min | sharded (`--shard=i/n`, `fullyParallel: true`, blob + `merge-reports`) |
+| A few tests share a resource that cannot be duplicated | parallel + test locks on those tests (`playwright-locks`) |
+| 5–10 min, or the whole suite shares mutable state / the target is rate-limited | serial (`--workers=1`) or per-project jobs |
+| > 10 min | sharded (`--shard=i/n`, `fullyParallel: true`, blob + `merge-reports`); locks do not cross shards |

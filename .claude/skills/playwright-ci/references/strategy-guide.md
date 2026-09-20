@@ -8,8 +8,19 @@
 | Machines | 1 | 1 | n (+1 merge job) |
 | Needs isolated tests | no | yes | yes (+ `fullyParallel: true` for balanced shards) |
 | Report | single blob → html | single blob → html | n blobs → `merge-reports` → html |
-| Best for | rate-limited/stateful targets, debugging order issues | most suites | long suites, multi-browser, release gates |
+| Best for | rate-limited targets, suites where everything shares state, debugging order issues | most suites | long suites, multi-browser, release gates |
+| Test locks (`lock`, 1.63+) | pointless (nothing overlaps) | **work**: same-name tests take turns, the rest stays parallel | **do not cross shards**: each shard is its own process |
 | Cost | lowest | low | n× minutes, fastest wall-clock |
+
+## Test locks and CI
+
+Full guide: `playwright-locks` skill (`references/ci.md`). What a CI author must know:
+
+- A test lock is a mutex inside **one** `playwright test` process. It replaces the serial strategy when only a few tests share a resource that cannot be duplicated: those tests take turns, the other workers keep running lock-free tests. Measured in the reference demo: locked stress run `15 passed (30.0s)` vs the same specs without locks `5 failed, 8 passed (33.0s)`.
+- It works in a single job with any number of workers and across projects of the same invocation. It does **not** work across shards, browser-matrix jobs, two workflow runs at once, or a colleague's local run against the same environment.
+- Shared across processes → in order: unique per test (`testInfo.testId`) → one resource per worker/shard → idempotent operation → run the `@locked` tests in one non-sharded job → a `concurrency:` group to queue whole runs per environment → external lock service.
+- `retries: CI ? 2 : 0` hides contention. Validate locks in a job with `--retries=0`, and pass `--workers=4`: the runner default (2) overlaps less, and slower runners collide *more* than laptops.
+- A job that is expected to fail (a race demonstration) uses `continue-on-error` on the step, writes the outcome to `$GITHUB_STEP_SUMMARY`, and drops the `github` reporter so it does not annotate the pull request. Tutorials only; never in a product pipeline.
 
 ## Trigger policy
 

@@ -18,6 +18,8 @@ pnpm exec playwright test <spec> --project=<ui|api|e2e> --reporter=list
 
 Record: failing test title, error message, the line, and whether it fails every time (`--repeat-each=3`).
 
+Fails only in the full run, passes alone or on retry? Reproduce with retries off and real overlap before anything else: `--workers=4 --repeat-each=3 --retries=0` on the failing spec **plus** the specs that write what it reads.
+
 ## 2. Read the evidence
 
 - Error text: what was expected vs received; locator description (from `.describe()`); timeout value.
@@ -26,7 +28,7 @@ Record: failing test title, error message, the line, and whether it fails every 
 
 ## 3. Classify (`references/failure-taxonomy.md`)
 
-`locator` · `timing` · `data` · `auth` · `environment` · `app-bug` · `flaky`. The class decides the fix; do not edit code before classifying.
+`locator` · `timing` · `data` · `auth` · `environment` · `app-bug` · `contention` · `flaky`. The class decides the fix; do not edit code before classifying.
 
 ## 4. Inspect live (when the evidence is not conclusive)
 
@@ -52,6 +54,7 @@ Every CLI action prints the equivalent Playwright code: use it as the fix templa
 | auth | regenerate storage state (`pnpm test:setup`); fix `E2E.login()`/`authToken` fixture |
 | environment | `.env` values, missing browser, network; document in `readme` if others will hit it |
 | app-bug | bug report; no test change (or `test.fixme` with the bug id, on request) |
+| contention | two tests use the same account/record/file at once: isolate the data per test or role; if the resource cannot be duplicated, `{ lock: '<resource-name>' }` on **every** participant and a restore in the writer's `afterEach` (`playwright-locks` skill). Never `--workers=1`, retries or sleeps |
 | flaky | find the race (network, animation, test isolation, shared data); fix root cause; retries are not a fix |
 
 ## 6. Verify
@@ -61,7 +64,7 @@ pnpm lint
 pnpm exec playwright test <spec> --project=<p> --repeat-each=3
 ```
 
-Show the output. Then run the full project the spec belongs to once.
+Show the output. Then run the full project the spec belongs to once. A `contention` fix is verified under stress instead: `pnpm exec playwright test --workers=4 --repeat-each=2 --retries=0`.
 
 ## 7. Report and remember
 

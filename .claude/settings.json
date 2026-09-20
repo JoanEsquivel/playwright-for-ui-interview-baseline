@@ -36,6 +36,7 @@
       "Skill(playwright-fix-test)",
       "Skill(playwright-delete-test)",
       "Skill(playwright-ci)",
+      "Skill(playwright-locks)",
       "Skill(playwright-cli)"
     ]
   }

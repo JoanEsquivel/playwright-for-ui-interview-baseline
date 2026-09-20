@@ -25,6 +25,12 @@ grep -rn "<ClassName>\|<fixtureName>\|<methodName>" pages utils fixtures api tes
 
 If a page object/client is still used by another spec, delete only the requested spec and stop.
 
+Locked tests (`{ lock: '<name>' }`): `grep -rn "lock:" tests` for the same name before deleting.
+- Deleting the only **writer** of the resource → the remaining holders are readers and no longer need the lock; remove it from them so they run in parallel again.
+- Deleting a reader → nothing else changes.
+- Never remove a `lock` from a test you are keeping while another test still writes the resource.
+- Race-demo copies (`tests/demo/race/<spec>`, `playwright.race.config.*`, `demo:*` scripts, the locks workflow) go together with their originals.
+
 ## 3. Delete and clean
 
 Page object full cleanup:

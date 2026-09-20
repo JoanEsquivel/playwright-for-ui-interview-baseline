@@ -13,10 +13,12 @@ Templates in `templates/` are the reference workflows with tokens: `{{BASE_URL}}
 | Choose | When |
 |---|---|
 | **parallel** (default) | suite < ~10 min, tests isolated; PR runs `@smoke`, push runs everything |
-| **serial** | target is rate-limited, shares mutable state between tests, or a single test user must not run concurrently |
+| **serial** | the target is rate-limited or the **whole suite** shares mutable state |
 | **sharded** | suite > ~10 min or many browsers; needs `fullyParallel: true` and the `blob` reporter (already in the standard config) |
 
 Combine: parallel on PR + sharded nightly is the usual enterprise setup. Keep `lint.yml` always.
+
+Only **a few tests** share something that cannot be duplicated (a seeded account, a single test user, a one-slot sandbox)? Stay parallel and put a test lock on those tests (`playwright-locks` skill) instead of going serial. Locks work inside one job only: they do not cross shards, matrix jobs or concurrent runs (`references/strategy-guide.md`, "Test locks and CI").
 
 ## 2. Install
 
@@ -31,6 +33,7 @@ Combine: parallel on PR + sharded nightly is the usual enterprise setup. Keep `l
 - Shard count: start at 4; raise until per-shard time is ~3–5 min; keep `fail-fast: false`.
 - Browsers: add a matrix `browser: [chromium, firefox, webkit]` that sets `BROWSERS=${{ matrix.browser }}` and the action input `browsers: ${{ matrix.browser }}`.
 - Serial: `--workers=1`; consider `--project=<one>` per job to regain some parallelism across projects.
+- Locked tests + shards: give each shard its own resource (`E2E_USERNAME_${{ matrix.shardIndex }}`), or run the `@locked` tests in one non-sharded job and shard the rest with `--grep-invert @locked`. Stress/validation jobs for locks run with `--workers=4 --retries=0`; two-job proof workflow: `playwright-locks/templates/playwright-locks.yml`.
 
 ## 4. Verify
 

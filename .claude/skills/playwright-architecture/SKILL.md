@@ -33,7 +33,7 @@ eslint.config.mjs            architecture gates
 3. Locators: `getByRole`/`getByLabel` → `[data-test]`/`[data-testid]` → `getByText`; always `.describe()`. Verify on the live page with `playwright-cli` first.
 4. `load()` + `waitLoad()` instead of `page.goto()` in specs.
 5. Credentials via `env.*`; other data via `data/*.json`.
-6. Isolated, deterministic tests: no `waitForTimeout`, no conditionals, web-first assertions, tags on every test.
+6. Isolated, deterministic tests: no `waitForTimeout`, no conditionals, web-first assertions, tags on every test. A resource that cannot be isolated takes a `{ lock: '<resource-name>' }` on every test that touches it (`playwright-locks`).
 7. Every page object/client is a fixture; orphans are removed on delete.
 8. Done = `lint` clean + targeted run green.
 
@@ -111,7 +111,7 @@ API client + schema + spec: see `references/api-layer.md`. E2E flow, setup and t
 
 ## Decision tables
 
-Which style, page object vs flow, seed via API, storage state vs explicit login, tag policy: `references/decision-tables.md`.
+Which style, page object vs flow, seed via API, storage state vs explicit login, shared resources and locks, tag policy, parallelism: `references/decision-tables.md`. Test locks in depth (semantics, pitfalls, reproducing a race, CI): the `playwright-locks` skill.
 
 ## Common mistakes
 
@@ -121,6 +121,8 @@ Which style, page object vs flow, seed via API, storage state vs explicit login,
 - `await page.waitForTimeout(2000)` → use a web-first assertion or `waitFor()`.
 - `if (await locator.isVisible())` → assert the expected state directly.
 - Loosening `toHaveText` to `toContainText` to make a run pass → investigate; file a bug if the app changed.
+- Two tests mutate the same account/record/file and fail only with several workers → isolate the data; if it cannot be duplicated, `lock` every participant (`playwright-locks`), do not drop to `--workers=1` or add retries.
+- Several roles sharing one storage-state file that a spec rewrites → one `.auth/<role>.json` per role, written once by setup.
 
 ## Verification for any change
 

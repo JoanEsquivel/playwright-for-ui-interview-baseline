@@ -19,6 +19,8 @@ Follows `playwright-architecture` (preloaded in the agent; read it if not). Reso
 
 Existing artifacts win: if `pages/<name>` or `api/clients/<name>.client` exists, extend it instead of creating a new one.
 
+**Shared-resource check.** Does the new test *change* something other tests use (a seeded account, a global setting, a fixed record, a file on the runner)? First give it its own data (create through the API, own user, own `.auth/<role>.json`). Only when the resource cannot be duplicated: follow the `playwright-locks` skill — same `lock` name on every participant, restore in `afterEach`. If the project already has lock names (grep `lock:` in `tests/`), reuse them.
+
 ## 1. UI path (summary; details in `references/ui-flow.md`)
 
 1. **Live scan gate.** `playwright-cli open <BASE_URL><route>`; if the page redirects to login, authenticate (`state-load .auth/user.json` when the setup project has run, otherwise fill the login form through the CLI). `snapshot`, then `eval "el => el.getAttribute('data-test') ?? el.getAttribute('data-testid')" <ref>` for elements without a usable role/name. `close` when done.
@@ -46,4 +48,5 @@ List every file created/modified, the run command and its output. If the live pa
 - [ ] Fixture entry added (page or client); index untouched unless a new fixture file was created
 - [ ] Spec imports from the fixtures index; tags set; no `page.goto`; no literal credentials
 - [ ] Data in `data/*.json`, credentials via `env`
+- [ ] Test owns the data it changes; a resource that cannot be duplicated has the project's `lock` name on every participant and is restored in `afterEach`
 - [ ] `lint` clean and the targeted run green, output shown

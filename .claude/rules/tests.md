@@ -14,6 +14,7 @@ paths:
 - Web-first assertions only (`await expect(locator).toBeVisible()`), never `isVisible()` checks, `waitForTimeout`, `networkidle` or `if` inside a test. Enforced by `eslint-plugin-playwright`.
 - Credentials from `utils/env` (`env.E2E_USERNAME`); other data from `data/*.json`. Never string literals for credentials. Enforced by lint.
 - `tests/ui/login.spec.ts`-style specs that must start logged out declare `test.use({ storageState: { cookies: [], origins: [] } })`.
+- A test owns the data it changes. When tests share a resource that cannot be duplicated (seeded account, global setting, one-slot sandbox), declare the same lock on **every** participant, group form by default: `test.describe('<Feature>', { tag: ['@e2e'], lock: '<resource-name>' }, …)` (Playwright 1.63+). Writers snapshot in `beforeEach` and restore in `afterEach`. A lock is not an order, not cleanup and does not cross shards; never use `describe.configure({ mode: 'serial' })`, `--workers=1`, retries or sleeps to hide a collision. See `playwright-locks`.
 - API specs: assert status first, then `expect(body).toMatchSchema(Schema)`, then business rules on `Schema.parse(body)`. Type the payload as `unknown` before matching.
 - Never weaken an assertion to make a test pass. If the application is wrong, write a bug report (see `playwright-fix-test`).
 

@@ -66,7 +66,7 @@ Both must pass before reporting completion. Show the output.
 - [ ] `AGENTS.md` in the new project has the real parameters table (no `{{TOKENS}}` left: `grep -rn "{{" .` is empty)
 - [ ] `pnpm lint` clean, `pnpm test` green
 - [ ] Login/landing locators verified on the live page (no `SCAFFOLD` comments left) or auth removed entirely
-- [ ] CI: `lint.yml` and `playwright-parallel.yml` present; add serial/sharded with `playwright-ci` if needed
+- [ ] CI: `lint.yml` and `playwright-parallel.yml` present; add serial/sharded with `playwright-ci` if needed. The target has a resource tests cannot duplicate (one seeded account, a one-slot sandbox)? Tell the user about `playwright-locks` (the pinned Playwright ≥ 1.63 supports `{ lock }`)
 - [ ] Git initialised and first commit made (`git init && git add -A && git commit -m "chore: scaffold Playwright framework"`), unless the target is already a repository
 
 ## What the generated project contains

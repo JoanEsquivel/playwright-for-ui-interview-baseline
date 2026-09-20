@@ -4,7 +4,7 @@
  *   .claude/rules/*.md        → .cursor/rules/<name>.mdc            (Cursor: globs / alwaysApply)
  *                             → .github/instructions/<name>.instructions.md (Copilot: applyTo)
  *   .claude/agents/<name>.md  → .github/agents/<name>.agent.md      (Copilot custom agent)
- *   AGENTS.md                 → .github/copilot-instructions.md     (pointer, always-on)
+ *   AGENTS.md                 → .github/copilot-instructions.md     (pointer, always-on; skill list read from .claude/skills/)
  *
  * Usage: node scripts/sync-agent-config.mjs [--check]
  *   --check  exit 1 if any generated file would change (CI gate)
@@ -87,12 +87,17 @@ if (existsSync(agentsDir)) {
 }
 
 // ---- AGENTS.md → copilot-instructions.md ----
+// Skill names come from the folders on disk, so a new skill can never leave this list stale.
+const skillsDir = join(root, '.claude', 'skills');
+const skillNames = existsSync(skillsDir)
+  ? readdirSync(skillsDir).filter((d) => existsSync(join(skillsDir, d, 'SKILL.md'))).sort()
+  : [];
 if (existsSync(join(root, 'AGENTS.md'))) {
   const content = HEADER.replace('%s', 'AGENTS.md') +
     '# Copilot instructions\n\n' +
     'Follow `AGENTS.md` at the repository root: it is the contract for this Playwright framework (parameters, layout, non-negotiable rules, test styles).\n\n' +
     '- Path-specific rules: `.github/instructions/*.instructions.md` (generated from `.claude/rules/`).\n' +
-    '- Agent skills: `.claude/skills/` (`playwright-architecture`, `playwright-scaffold`, `playwright-create-test`, `playwright-fix-test`, `playwright-delete-test`, `playwright-ci`, `playwright-cli`).\n' +
+    `- Agent skills: \`.claude/skills/\`${skillNames.length ? ` (${skillNames.map((s) => `\`${s}\``).join(', ')})` : ''}.\n` +
     (agentNames.length ? `- Custom agent${agentNames.length > 1 ? 's' : ''}: ${agentNames.map((n) => `\`.github/agents/${n}.agent.md\``).join(', ')}.\n` : '') +
     '- Definition of done: `lint` clean and the targeted `playwright test` run green; never weaken an assertion to pass a test.\n';
   emit('.github/copilot-instructions.md', content);
